@@ -1,13 +1,14 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BarChart3, Check, Eye, EyeOff, FolderGit2, FolderArchive, LayoutGrid, Link2, MessageSquare, Pencil, RefreshCw, Save } from "lucide-react";
+import { BarChart3, Check, Eye, EyeOff, FolderGit2, FolderArchive, LayoutGrid, Link2, MessageSquare, Moon, Pencil, RefreshCw, Save, Sun } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppSwitcher } from "@/components/AppSwitcher";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/components/theme-provider";
 import { settingsApi, type AppId, vscodeApi } from "@/lib/api";
 import { useSessionsQuery } from "@/lib/query";
 import { cn } from "@/lib/utils";
@@ -283,6 +284,7 @@ const statusToneClass = (tone: "positive" | "warning" | "neutral"): string => {
 function App() {
   const { t } = useTranslation();
   const { isLoading: authLoading, isAuthenticated, authEnabled } = useAuth();
+  const { theme, setTheme } = useTheme();
   const queryClient = useQueryClient();
 
   const [activeApp, setActiveApp] = useState<AppId>(getInitialApp);
@@ -1269,7 +1271,7 @@ function App() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-primary/30">
-      <header className="sticky top-0 z-40 px-3 pt-4 md:px-5 lg:px-8">
+      <header className="sticky top-0 z-40 px-4 pt-4 md:px-6 lg:px-10">
         <div className="app-toolbar-shell mx-auto flex h-[60px] items-center justify-between gap-3 px-3 md:px-4">
           <span className="text-lg font-semibold tracking-tight text-foreground">
             CLI Memory
@@ -1298,6 +1300,15 @@ function App() {
                 </Button>
               ))}
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 w-9 shrink-0 rounded-full p-0"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              title={theme === "dark" ? "Light mode" : "Dark mode"}
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
           </div>
         </div>
       </header>

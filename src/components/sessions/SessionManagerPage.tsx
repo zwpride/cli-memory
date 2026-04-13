@@ -515,7 +515,7 @@ export function SessionManagerPage({ appId }: { appId: string }) {
       >
         <div className="flex-1 overflow-hidden flex flex-col gap-4">
           <div className="sticky top-0 z-20">
-            <div className="app-panel border-white/60 bg-white/82 px-4 py-4 shadow-[0_18px_45px_-36px_rgba(15,23,42,0.4)] backdrop-blur-xl dark:border-white/[0.08] dark:bg-slate-950/72">
+            <div className="app-panel border-white/60 bg-white/82 px-4 py-4 shadow-[0_4px_24px_-8px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-white/[0.08] dark:bg-slate-950/72">
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-2">
@@ -680,7 +680,7 @@ export function SessionManagerPage({ appId }: { appId: string }) {
 
           <div className="flex-1 overflow-hidden grid gap-4 xl:grid-cols-[480px_minmax(0,1fr)]">
             {/* 左侧会话列表 */}
-            <Card className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <Card className="flex flex-col min-h-0 overflow-hidden xl:sticky xl:top-4 xl:self-start xl:max-h-[calc(100vh-180px)]">
               <CardHeader className="border-b px-4 py-4">
                 <div className="flex items-center justify-between gap-3">
                   <CardTitle className="text-sm font-medium whitespace-nowrap">
@@ -822,7 +822,7 @@ export function SessionManagerPage({ appId }: { appId: string }) {
                               {getProviderLabel(selectedSession.providerId, t)}
                             </TooltipContent>
                           </Tooltip>
-                          <h2 className="text-base font-semibold truncate">
+                          <h2 className="text-base font-semibold break-words">
                             {formatSessionTitle(selectedSession)}
                           </h2>
                         </div>

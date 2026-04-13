@@ -52,7 +52,7 @@ export function SessionItem({
       className={cn(
         "group flex items-start gap-3 rounded-[22px] border px-4 py-3.5 transition-all duration-200",
         isSelected
-          ? "border-primary/25 bg-white/82 shadow-[0_16px_34px_-28px_rgba(37,99,235,0.7)] dark:bg-white/[0.08]"
+          ? "border-primary/25 bg-white/82 shadow-[0_4px_20px_-6px_rgba(37,99,235,0.3)] dark:bg-white/[0.08]"
           : "border-white/35 bg-white/48 hover:bg-white/64 dark:border-white/8 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]",
       )}
       style={{
@@ -92,7 +92,7 @@ export function SessionItem({
               {getProviderLabel(session.providerId, t)}
             </TooltipContent>
           </Tooltip>
-          <span className="flex-1 truncate text-sm font-medium">
+          <span className="flex-1 text-sm font-medium line-clamp-2 break-words" title={title}>
             {searchQuery ? highlightText(title, searchQuery) : title}
           </span>
           <ChevronRight
