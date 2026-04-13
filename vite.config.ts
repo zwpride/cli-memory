@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react";
 import { codeInspectorPlugin } from "code-inspector-plugin";
 import pkg from "./package.json" with { type: "json" };
 
-const backendPort = Number(process.env.CC_SWITCH_PORT || 17666);
+const backendPort = Number(process.env.CLI_MEMORY_PORT || 17666);
 
 export default defineConfig(({ command, mode }) => {
   const isWebMode = mode === "web";

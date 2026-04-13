@@ -12,9 +12,9 @@ while [ -L "$SCRIPT_SOURCE" ]; do
 done
 PROJECT_ROOT="$(cd -P "$(dirname "$SCRIPT_SOURCE")" && pwd)"
 
-RUNTIME_DIR="${CC_SWITCH_RUNTIME_DIR:-$PROJECT_ROOT/.run/web}"
+RUNTIME_DIR="${CLI_MEMORY_RUNTIME_DIR:-$PROJECT_ROOT/.run/web}"
 BACKEND_PID_FILE="$RUNTIME_DIR/backend.pid"
-BACKEND_PORT="${CC_SWITCH_PORT:-17666}"
+BACKEND_PORT="${CLI_MEMORY_PORT:-17666}"
 
 is_pid_running() {
     local pid="${1:-}"

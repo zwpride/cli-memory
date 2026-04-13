@@ -1,4 +1,4 @@
-//! cc-switch-core
+//! cli-memory-core
 //!
 //! 该 crate 提供与 UI 无关的核心业务封装，供 Web 服务器等复用。
 //! 当前实现基于现有的 `cc_switch`（src-tauri）进行轻量封装，
@@ -47,7 +47,7 @@ pub struct CoreContext {
 impl CoreContext {
     /// 初始化核心上下文
     ///
-    /// - 打开/初始化 `~/.cc-switch/cc-switch.db`
+    /// - 打开/初始化 `~/.cli-memory/cc-switch.db`
     /// - 构造 `AppState`
     /// - 尝试初始化 `SkillService`（失败时只记录为 None，不阻塞其它功能）
     pub fn new() -> Result<Self, AppError> {
@@ -2293,7 +2293,7 @@ pub struct McpConfigResponse {
     pub servers: std::collections::HashMap<String, serde_json::Value>,
 }
 
-/// 获取 MCP 配置（来自 ~/.cc-switch/config.json）
+/// 获取 MCP 配置（来自 ~/.cli-memory/config.json）
 #[allow(deprecated)]
 pub fn get_mcp_config(ctx: &CoreContext, app: &str) -> Result<McpConfigResponse, String> {
     let config_path = cc_switch::get_app_config_path()

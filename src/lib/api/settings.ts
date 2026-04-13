@@ -2,7 +2,7 @@ import { getTransportMode, invoke } from "@/lib/transport";
 import type { Settings, WebDavSyncSettings, RemoteSnapshotInfo } from "@/types";
 import type { AppId } from "./types";
 
-const API_BASE = import.meta.env.VITE_CC_SWITCH_API_BASE || "/api";
+const API_BASE = import.meta.env.VITE_CLI_MEMORY_API_BASE || "/api";
 
 export interface ConfigTransferResult {
   success: boolean;

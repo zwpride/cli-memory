@@ -217,7 +217,7 @@ export const handlers = [
   ),
 
   http.post(`${TAURI_ENDPOINT}/get_default_app_config_dir`, () =>
-    success("/home/mock/.cc-switch"),
+    success("/home/mock/.cli-memory"),
   ),
 
   http.post(`${TAURI_ENDPOINT}/get_default_config_dir`, async ({ request }) => {

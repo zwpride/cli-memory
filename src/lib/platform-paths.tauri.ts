@@ -4,7 +4,7 @@ import type { AppId } from "@/lib/api";
 export async function computeDefaultAppConfigDir(): Promise<string | undefined> {
   try {
     const home = await homeDir();
-    return await join(home, ".cc-switch");
+    return await join(home, ".cli-memory");
   } catch (error) {
     console.error(
       "[platform-paths] Failed to resolve default app config dir",

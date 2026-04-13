@@ -78,7 +78,7 @@ impl Default for SessionStore {
     }
 }
 
-/// Loads authentication configuration from ~/.cc-switch/web-auth.json
+/// Loads authentication configuration from ~/.cli-memory/web-auth.json
 /// Returns None if file is missing or invalid (auth disabled)
 pub fn load_auth_config() -> Option<AuthConfig> {
     let home = dirs::home_dir()?;

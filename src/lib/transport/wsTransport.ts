@@ -242,13 +242,13 @@ class JsonRpcWebSocketClient {
 }
 
 function buildWsUrl(): string {
-  const apiBase = import.meta.env.VITE_CC_SWITCH_API_BASE || "/api";
+  const apiBase = import.meta.env.VITE_CLI_MEMORY_API_BASE || "/api";
   const { protocol, host } = window.location;
   const wsProtocol = protocol === "https:" ? "wss:" : "ws:";
   const url = new URL(`${wsProtocol}//${host}${apiBase}/ws`);
 
   const token =
-    import.meta.env.VITE_CC_SWITCH_AUTH_TOKEN ||
+    import.meta.env.VITE_CLI_MEMORY_AUTH_TOKEN ||
     localStorage.getItem("cc_switch_auth_token");
   if (token) {
     url.searchParams.set("auth", token);

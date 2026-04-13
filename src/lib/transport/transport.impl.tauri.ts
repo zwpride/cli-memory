@@ -4,7 +4,7 @@ import { WebSocketTransport } from "./wsTransport";
 import type { ApiTransport } from "./types";
 
 export function detectTransport(): ApiTransport {
-  const mode = import.meta.env.VITE_CC_SWITCH_MODE;
+  const mode = import.meta.env.VITE_CLI_MEMORY_MODE;
 
   if (mode === "ws" || mode === "websocket") {
     console.log("[Transport] Using WebSocket transport (build-time)");

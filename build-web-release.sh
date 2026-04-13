@@ -74,8 +74,8 @@ install_smoke_browser() {
 run_release_smoke() {
     local binary_path="$1"
 
-    if [[ "${CC_SWITCH_SKIP_RELEASE_SMOKE:-0}" == "1" ]]; then
-        echo "⏭️  Skipping Web release smoke check (CC_SWITCH_SKIP_RELEASE_SMOKE=1)"
+    if [[ "${CLI_MEMORY_SKIP_RELEASE_SMOKE:-0}" == "1" ]]; then
+        echo "⏭️  Skipping Web release smoke check (CLI_MEMORY_SKIP_RELEASE_SMOKE=1)"
         return
     fi
 
@@ -115,7 +115,7 @@ require_command node "node not found. Please install Node.js."
 resolve_package_manager
 
 RELEASE_VERSION="${RELEASE_VERSION:-$(node -p "require('./package.json').version")}"
-RELEASE_PRODUCT_NAME="${RELEASE_PRODUCT_NAME:-zwpride-cc-switch-web}"
+RELEASE_PRODUCT_NAME="${RELEASE_PRODUCT_NAME:-zwpride-cli-memory-web}"
 RELEASE_PLATFORM_TAG="${RELEASE_PLATFORM_TAG:-$(normalize_os)-$(normalize_arch)}"
 RELEASE_ASSET_NAME="${RELEASE_ASSET_NAME:-${RELEASE_PRODUCT_NAME}-v${RELEASE_VERSION}-${RELEASE_PLATFORM_TAG}}"
 RELEASE_ASSET_PATH="$OUTPUT_DIR/$RELEASE_ASSET_NAME"

@@ -72,7 +72,7 @@ async fn welcome_handler() -> Html<&'static str> {
     Html(r#"<!DOCTYPE html>
 <html>
 <head>
-    <title>CC-Switch Web</title>
+    <title>CLI Memory Web</title>
     <style>
         body { font-family: system-ui, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
         h1 { color: #2563eb; }
@@ -82,7 +82,7 @@ async fn welcome_handler() -> Html<&'static str> {
     </style>
 </head>
 <body>
-    <h1>🚀 CC-Switch Web Server</h1>
+    <h1>🚀 CLI Memory Web Server</h1>
     <div class="info">
         <p><strong>Status:</strong> Running</p>
         <p><strong>API Endpoints:</strong></p>
@@ -243,17 +243,17 @@ async fn main() {
     };
 
     // Get port from environment or use default
-    let requested_port: u16 = std::env::var("CC_SWITCH_PORT")
+    let requested_port: u16 = std::env::var("CLI_MEMORY_PORT")
         .ok()
         .and_then(|p| p.parse().ok())
         .unwrap_or(17666);
 
     // Get host from environment or use default
-    let host = std::env::var("CC_SWITCH_HOST")
+    let host = std::env::var("CLI_MEMORY_HOST")
         .unwrap_or_else(|_| "0.0.0.0".to_string());
 
     // Check if auto-port selection is enabled (default: true)
-    let auto_port = std::env::var("CC_SWITCH_AUTO_PORT")
+    let auto_port = std::env::var("CLI_MEMORY_AUTO_PORT")
         .map(|v| v != "0" && v.to_lowercase() != "false")
         .unwrap_or(true);
 
@@ -269,7 +269,7 @@ async fn main() {
         match find_available_port(&host, requested_port + 1) {
             Some(p) => {
                 eprintln!("   Automatically using port {} instead", p);
-                eprintln!("   To disable auto-port: CC_SWITCH_AUTO_PORT=false");
+                eprintln!("   To disable auto-port: CLI_MEMORY_AUTO_PORT=false");
                 eprintln!();
                 p
             }
@@ -279,7 +279,7 @@ async fn main() {
                 eprintln!();
                 eprintln!("   Solutions:");
                 eprintln!("   1. Stop the process using port {}: lsof -ti:{} | xargs kill", requested_port, requested_port);
-                eprintln!("   2. Use a different port: CC_SWITCH_PORT=8080 ./cc-switch-web");
+                eprintln!("   2. Use a different port: CLI_MEMORY_PORT=8080 ./cc-switch-web");
                 eprintln!();
                 std::process::exit(1);
             }
@@ -296,11 +296,11 @@ async fn main() {
         eprintln!("      lsof -ti:{} | xargs kill", requested_port);
         eprintln!();
         eprintln!("   2. Use a different port:");
-        eprintln!("      CC_SWITCH_PORT=8080 ./cc-switch-web");
+        eprintln!("      CLI_MEMORY_PORT=8080 ./cc-switch-web");
         if is_loopback {
             eprintln!();
             eprintln!("   3. Enable auto-port selection:");
-            eprintln!("      CC_SWITCH_AUTO_PORT=true ./cc-switch-web");
+            eprintln!("      CLI_MEMORY_AUTO_PORT=true ./cc-switch-web");
         }
         eprintln!();
         std::process::exit(1);
@@ -311,7 +311,7 @@ async fn main() {
 
     println!();
     println!("╔════════════════════════════════════════════════════╗");
-    println!("║           CC-Switch Web Server v0.1.0              ║");
+    println!("║           CLI Memory Web Server v0.1.0              ║");
     println!("╠════════════════════════════════════════════════════╣");
     if has_frontend {
         println!("║  🌐 Web UI:    http://{}:{:<21}║", access_host, port);
@@ -320,7 +320,7 @@ async fn main() {
     println!("║  🔌 WebSocket: ws://{}:{}/api/ws{:11}║", access_host, port, "");
     println!("╠════════════════════════════════════════════════════╣");
     if !is_loopback {
-        println!("║  🔒 Auth:      Enable ~/.cc-switch/web-auth.json   ║");
+        println!("║  🔒 Auth:      Enable ~/.cli-memory/web-auth.json   ║");
         println!("║  📥 SQL Upload: POST /api/import-config            ║");
         println!("║  📤 SQL Export: GET  /api/export-config            ║");
         println!("╠════════════════════════════════════════════════════╣");
@@ -343,7 +343,7 @@ async fn main() {
         }
     }
 
-    tracing::info!("Starting CC-Switch server on {}", addr);
+    tracing::info!("Starting CLI Memory server on {}", addr);
 
     let listener = match tokio::net::TcpListener::bind(&addr).await {
         Ok(l) => l,

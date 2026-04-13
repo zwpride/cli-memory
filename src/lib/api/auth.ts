@@ -93,7 +93,7 @@ export async function authLogout(
 // Web mode auth API - uses direct HTTP fetch to avoid WebSocket chicken-and-egg problem
 // (WebSocket requires auth, but auth check needs to happen before WebSocket connects)
 
-const API_BASE = import.meta.env.VITE_CC_SWITCH_API_BASE || "/api";
+const API_BASE = import.meta.env.VITE_CLI_MEMORY_API_BASE || "/api";
 
 export interface AuthStatusResponse {
   enabled: boolean;

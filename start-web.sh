@@ -14,17 +14,17 @@ PROJECT_ROOT="$(cd -P "$(dirname "$SCRIPT_SOURCE")" && pwd)"
 
 cd "$PROJECT_ROOT"
 
-RUNTIME_DIR="${CC_SWITCH_RUNTIME_DIR:-$PROJECT_ROOT/.run/web}"
+RUNTIME_DIR="${CLI_MEMORY_RUNTIME_DIR:-$PROJECT_ROOT/.run/web}"
 BACKEND_LOG_FILE="$RUNTIME_DIR/backend.log"
 BACKEND_PID_FILE="$RUNTIME_DIR/backend.pid"
 
-BACKEND_HOST="${CC_SWITCH_HOST:-0.0.0.0}"
-BACKEND_PORT="${CC_SWITCH_PORT:-17666}"
-START_TIMEOUT="${CC_SWITCH_START_TIMEOUT:-30}"
-SKIP_ALL_BUILD="${CC_SWITCH_SKIP_BUILD:-0}"
-SKIP_FRONTEND_BUILD="${CC_SWITCH_SKIP_FRONTEND_BUILD:-0}"
-SKIP_BACKEND_BUILD="${CC_SWITCH_SKIP_BACKEND_BUILD:-0}"
-REUSE_IF_RUNNING="${CC_SWITCH_REUSE_IF_RUNNING:-0}"
+BACKEND_HOST="${CLI_MEMORY_HOST:-0.0.0.0}"
+BACKEND_PORT="${CLI_MEMORY_PORT:-17666}"
+START_TIMEOUT="${CLI_MEMORY_START_TIMEOUT:-30}"
+SKIP_ALL_BUILD="${CLI_MEMORY_SKIP_BUILD:-0}"
+SKIP_FRONTEND_BUILD="${CLI_MEMORY_SKIP_FRONTEND_BUILD:-0}"
+SKIP_BACKEND_BUILD="${CLI_MEMORY_SKIP_BACKEND_BUILD:-0}"
+REUSE_IF_RUNNING="${CLI_MEMORY_REUSE_IF_RUNNING:-0}"
 
 BACKEND_BIN="$PROJECT_ROOT/crates/server/target/release/cli-memory"
 
@@ -168,7 +168,7 @@ if pid="$(read_pid_file "$BACKEND_PID_FILE" 2>/dev/null || true)"; [[ -n "$pid" 
 
     echo "❌ Backend is already running (PID: $pid)"
     echo "   Stop it first: ./stop-web.sh"
-    echo "   Or reuse it: CC_SWITCH_REUSE_IF_RUNNING=1 ./start-web.sh"
+    echo "   Or reuse it: CLI_MEMORY_REUSE_IF_RUNNING=1 ./start-web.sh"
     exit 1
 fi
 
@@ -189,9 +189,9 @@ if probe_tcp "$BACKEND_PROBE_HOST" "$BACKEND_PORT"; then
     fi
 
     echo "❌ Backend port $BACKEND_PORT is already in use"
-    echo "   Stop the existing service or set CC_SWITCH_PORT to another port."
+    echo "   Stop the existing service or set CLI_MEMORY_PORT to another port."
     echo "   If it is an existing CLI Memory instance, you can reuse it:"
-    echo "   CC_SWITCH_REUSE_IF_RUNNING=1 ./start-web.sh"
+    echo "   CLI_MEMORY_REUSE_IF_RUNNING=1 ./start-web.sh"
     exit 1
 fi
 
@@ -234,7 +234,7 @@ echo "🎯 Starting service in background..."
 echo ""
 
 echo "▶ Starting backend on http://$BACKEND_HOST:$BACKEND_PORT"
-BACKEND_PID="$(start_detached "$BACKEND_LOG_FILE" env CC_SWITCH_HOST="$BACKEND_HOST" CC_SWITCH_PORT="$BACKEND_PORT" CC_SWITCH_AUTO_PORT=false "$BACKEND_BIN")"
+BACKEND_PID="$(start_detached "$BACKEND_LOG_FILE" env CLI_MEMORY_HOST="$BACKEND_HOST" CLI_MEMORY_PORT="$BACKEND_PORT" CLI_MEMORY_AUTO_PORT=false "$BACKEND_BIN")"
 printf '%s\n' "$BACKEND_PID" >"$BACKEND_PID_FILE"
 
 if ! wait_for_http "Backend" "$BACKEND_PID" "$BACKEND_PROBE_HOST" "$BACKEND_PORT" "/health" "$BACKEND_LOG_FILE"; then

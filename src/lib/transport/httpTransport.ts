@@ -1,6 +1,6 @@
 import type { ApiTransport, UnlistenFn } from "./types";
 
-const API_BASE = import.meta.env.VITE_CC_SWITCH_API_BASE || "/api";
+const API_BASE = import.meta.env.VITE_CLI_MEMORY_API_BASE || "/api";
 
 async function httpInvoke<T>(command: string, payload?: unknown): Promise<T> {
   const res = await fetch(`${API_BASE}/invoke`, {
