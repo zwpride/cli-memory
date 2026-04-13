@@ -333,7 +333,7 @@ export function RequestLogTable({
               size="sm"
               variant="ghost"
               onClick={handleRefresh}
-              className="h-8 border border-white/45 bg-white/56 px-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] hover:bg-white/80 dark:border-white/[0.08] dark:bg-white/[0.04] dark:hover:bg-white/[0.09]"
+              className="h-8 border border-black/[0.08] bg-white/56 px-2 shadow-sm hover:bg-white/80 dark:border-white/[0.08] dark:bg-white/[0.04] dark:hover:bg-white/[0.09]"
             >
               <RefreshCw className="h-4 w-4" />
             </Button>

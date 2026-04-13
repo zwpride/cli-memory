@@ -68,9 +68,9 @@ const pageContainerClass =
 const toolbarNavButtonClass =
   "app-segmented-item h-9 shrink-0 px-3 text-[13px] font-medium";
 const sectionBadgeClass =
-  "border-white/45 bg-white/70 text-muted-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.78)] dark:border-white/[0.08] dark:bg-white/[0.05]";
+  "border-black/[0.08] bg-white/70 text-muted-foreground shadow-sm dark:border-white/[0.08] dark:bg-white/[0.05]";
 const utilityActionButtonClass =
-  "border border-white/45 bg-white/72 text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] hover:bg-white/92 dark:border-white/[0.08] dark:bg-white/[0.05] dark:text-foreground dark:hover:bg-white/[0.1]";
+  "border border-black/[0.08] bg-white/72 text-foreground shadow-sm hover:bg-white/92 dark:border-white/[0.08] dark:bg-white/[0.05] dark:text-foreground dark:hover:bg-white/[0.1]";
 
 interface LocalConfigSection {
   id: string;
@@ -277,7 +277,7 @@ const statusToneClass = (tone: "positive" | "warning" | "neutral"): string => {
     case "warning":
       return "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300";
     default:
-      return "border-white/45 bg-white/72 text-muted-foreground dark:border-white/[0.08] dark:bg-white/[0.05]";
+      return "border-black/[0.08] bg-white/72 text-muted-foreground dark:border-white/[0.08] dark:bg-white/[0.05]";
   }
 };
 
@@ -1033,7 +1033,7 @@ function App() {
                           </div>
                         </div>
                       ) : (
-                        <div className="mt-3 rounded-[1.2rem] border border-white/50 bg-slate-950/[0.92] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] dark:border-white/[0.08]">
+                        <div className="mt-3 rounded-lg border border-black/[0.08] bg-slate-950/[0.92] p-4 dark:border-white/[0.08]">
                           <pre className="overflow-x-auto whitespace-pre-wrap break-all font-mono text-[12px] leading-6 text-slate-100">
                             {displayContent}
                           </pre>

@@ -50,10 +50,10 @@ export function SessionItem({
   return (
     <div
       className={cn(
-        "group flex items-start gap-3 rounded-[22px] border px-4 py-3.5 transition-all duration-200",
+        "group flex items-start gap-3 rounded-xl border px-4 py-3.5 transition-all duration-200",
         isSelected
-          ? "border-primary/25 bg-white/82 shadow-[0_4px_20px_-6px_rgba(37,99,235,0.3)] dark:bg-white/[0.08]"
-          : "border-white/35 bg-white/48 hover:bg-white/64 dark:border-white/8 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]",
+          ? "border-primary/25 bg-white/82 shadow-sm dark:bg-white/[0.08]"
+          : "border-black/[0.06] bg-white/48 hover:bg-white/64 dark:border-white/8 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]",
       )}
       style={{
         contentVisibility: "auto",
@@ -104,7 +104,7 @@ export function SessionItem({
         </div>
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] text-muted-foreground">
-          <span className="inline-flex items-center gap-1 rounded-full border border-white/40 bg-white/72 px-2.5 py-1 dark:border-white/10 dark:bg-white/[0.05]">
+          <span className="inline-flex items-center gap-1 rounded-full border border-black/[0.08] bg-white/72 px-2.5 py-1 dark:border-white/10 dark:bg-white/[0.05]">
             {getProviderLabel(session.providerId, t)}
           </span>
           {projectName && (

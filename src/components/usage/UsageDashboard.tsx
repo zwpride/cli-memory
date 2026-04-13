@@ -119,7 +119,7 @@ export function UsageDashboard({
       className={cn("space-y-6 pb-8", embedded && "space-y-5 pb-4")}
     >
       {/* ── Toolbar: time range + refresh ── */}
-      <div className="sticky top-0 z-10 app-panel border-white/60 bg-white/84 p-4 shadow-[0_4px_24px_-8px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-white/[0.08] dark:bg-slate-950/72">
+      <div className="sticky top-0 z-10 app-panel bg-white/84 p-4 shadow-sm dark:border-white/[0.08] dark:bg-slate-950/72">
         <div className="flex flex-col gap-3">
           {/* Row 1: refresh + summary + time presets */}
           <div className="flex flex-wrap items-center gap-3">
@@ -127,7 +127,7 @@ export function UsageDashboard({
               type="button"
               variant="ghost"
               size="sm"
-              className="h-9 rounded-2xl border border-white/45 bg-white/56 px-3 text-xs text-muted-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] hover:bg-white/80 dark:border-white/[0.08] dark:bg-white/[0.04] dark:hover:bg-white/[0.09]"
+              className="h-9 rounded-lg border border-black/[0.08] bg-white/56 px-3 text-xs text-muted-foreground shadow-sm hover:bg-white/80 dark:border-white/[0.08] dark:bg-white/[0.04] dark:hover:bg-white/[0.09]"
               title={t("common.refresh", "刷新")}
               onClick={changeRefreshInterval}
             >
@@ -138,7 +138,7 @@ export function UsageDashboard({
             </Button>
 
             {isRefiningFilters && (
-              <div className="rounded-full border border-white/50 bg-white/72 px-3 py-1 text-xs text-muted-foreground dark:border-white/[0.08] dark:bg-white/[0.05]">
+              <div className="rounded-full border border-black/[0.08] bg-white/72 px-3 py-1 text-xs text-muted-foreground dark:border-white/[0.08] dark:bg-white/[0.05]">
                 {t("common.loading", { defaultValue: "读取中" })}
               </div>
             )}

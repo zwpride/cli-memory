@@ -510,7 +510,7 @@ export function SessionManagerPage({ appId }: { appId: string }) {
         onWheel={(e) => e.stopPropagation()}
       >
           <div className="sticky top-0 z-20">
-            <div className="app-panel border-white/60 bg-white/82 px-4 py-4 shadow-[0_4px_24px_-8px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-white/[0.08] dark:bg-slate-950/72">
+            <div className="app-panel bg-white/82 px-4 py-4 shadow-sm dark:border-white/[0.08] dark:bg-slate-950/72">
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-2">
@@ -546,7 +546,7 @@ export function SessionManagerPage({ appId }: { appId: string }) {
                         startTransition(() => setSearch(value));
                       }}
                       placeholder={t("sessionManager.searchPlaceholder")}
-                      className="h-10 rounded-2xl border-white/55 bg-white/72 pl-9 pr-9 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-white/[0.08] dark:bg-white/[0.05]"
+                      className="h-10 rounded-lg border-black/[0.08] bg-white/72 pl-9 pr-9 text-sm shadow-sm dark:border-white/[0.08] dark:bg-white/[0.05]"
                       aria-label={t("sessionManager.searchSessions", {
                         defaultValue: "搜索会话",
                       })}
@@ -571,7 +571,7 @@ export function SessionManagerPage({ appId }: { appId: string }) {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-10 rounded-2xl px-3"
+                    className="h-10 rounded-lg px-3"
                     onClick={() => {
                       void refetch();
                     }}
@@ -586,7 +586,7 @@ export function SessionManagerPage({ appId }: { appId: string }) {
                       variant={selectionMode ? "secondary" : "ghost"}
                       size="sm"
                       className={cn(
-                        "h-10 rounded-2xl px-3",
+                        "h-10 rounded-lg px-3",
                         selectionMode &&
                           "bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-950/60",
                       )}
@@ -611,7 +611,7 @@ export function SessionManagerPage({ appId }: { appId: string }) {
                 </div>
 
                 {selectionMode && (
-                  <div className="grid gap-3 rounded-2xl border border-border/70 bg-muted/40 px-3 py-3">
+                  <div className="grid gap-3 rounded-lg border border-border/70 bg-muted/40 px-3 py-3">
                     <div className="text-xs text-muted-foreground">
                       {t("sessionManager.batchModeHint", {
                         defaultValue: "勾选要删除的会话。搜索和筛选会自动只保留当前可见结果。",

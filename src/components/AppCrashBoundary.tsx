@@ -49,7 +49,7 @@ export function AppCrashScreen({
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.1),_transparent_40%),linear-gradient(180deg,_rgba(248,250,252,1),_rgba(241,245,249,0.96))] px-6 py-12 text-slate-950 dark:bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_transparent_36%),linear-gradient(180deg,_rgb(2,6,23),_rgb(15,23,42))] dark:text-slate-50">
-      <div className="w-full max-w-2xl rounded-[28px] border border-slate-200/80 bg-white/92 p-8 shadow-[0_32px_120px_-56px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/78">
+      <div className="w-full max-w-2xl rounded-xl border border-slate-200/80 bg-white/92 p-8 shadow-lg dark:border-slate-800 dark:bg-slate-950/78">
         <div className="inline-flex rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-medium tracking-[0.16em] text-amber-700 dark:text-amber-300">
           CC SWITCH RECOVERY
         </div>
@@ -62,7 +62,7 @@ export function AppCrashScreen({
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="inline-flex h-11 items-center justify-center rounded-2xl bg-slate-950 px-5 text-sm font-medium text-white transition-colors hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-950 dark:hover:bg-white"
+            className="inline-flex h-11 items-center justify-center rounded-lg bg-slate-950 px-5 text-sm font-medium text-white transition-colors hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-950 dark:hover:bg-white"
           >
             强制刷新页面
           </button>
@@ -72,13 +72,13 @@ export function AppCrashScreen({
               clearLocalUiState();
               window.location.reload();
             }}
-            className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
           >
             清理页面状态并刷新
           </button>
         </div>
 
-        <div className="mt-6 rounded-[22px] border border-slate-200/80 bg-slate-50/90 p-4 dark:border-slate-800 dark:bg-slate-900/70">
+        <div className="mt-6 rounded-lg border border-slate-200/80 bg-slate-50/90 p-4 dark:border-slate-800 dark:bg-slate-900/70">
           <div className="text-xs font-medium uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
             Error Summary
           </div>

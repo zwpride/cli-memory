@@ -35,9 +35,9 @@ const pageContainerClass =
 const segmentedButtonClass =
   "app-segmented-item h-10 px-4 text-sm font-medium";
 const sectionBadgeClass =
-  "border-white/45 bg-white/70 text-muted-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.78)] dark:border-white/[0.08] dark:bg-white/[0.05]";
+  "border-black/[0.08] bg-white/70 text-muted-foreground shadow-sm dark:border-white/[0.08] dark:bg-white/[0.05]";
 const utilityActionButtonClass =
-  "border border-white/45 bg-white/72 text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] hover:bg-white/92 dark:border-white/[0.08] dark:bg-white/[0.05] dark:text-foreground dark:hover:bg-white/[0.1]";
+  "border border-black/[0.08] bg-white/72 text-foreground shadow-sm hover:bg-white/92 dark:border-white/[0.08] dark:bg-white/[0.05] dark:text-foreground dark:hover:bg-white/[0.1]";
 
 function toolPanelIcon(panel: ToolPanel) {
   switch (panel) {
@@ -215,7 +215,7 @@ export default function ToolsWorkspace({
       <section className="app-shell flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border-default/60 px-5 py-4 lg:px-6">
           <div className="flex min-w-[220px] flex-1 items-start gap-3">
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-[1.2rem] border border-white/50 bg-white/76 text-foreground shadow-sm dark:border-white/[0.08] dark:bg-white/[0.06]">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-black/[0.08] bg-white/76 text-foreground shadow-sm dark:border-white/[0.08] dark:bg-white/[0.06]">
               <FolderArchive className="h-4 w-4" />
             </span>
             <div className="min-w-0 flex-1">
@@ -265,7 +265,7 @@ export default function ToolsWorkspace({
               </Button>
             ))}
             {activeToolPanel === "skillsDiscovery" && (
-              <Badge variant="outline" className="h-10 rounded-2xl px-4 text-sm">
+              <Badge variant="outline" className="h-10 rounded-lg px-4 text-sm">
                 {toolPanelLabel("skillsDiscovery", activeApp, t)}
               </Badge>
             )}
