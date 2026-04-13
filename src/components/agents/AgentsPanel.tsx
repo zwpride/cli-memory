@@ -39,10 +39,6 @@ function getAgentFiles(appId: AppId): Array<{ path: string; label: string; descr
       return [
         { path: "OPENCODE.md", label: "OPENCODE.md", description: "项目级指令" },
       ];
-    case "openclaw":
-      return [
-        { path: "OPENCLAW.md", label: "OPENCLAW.md", description: "项目级指令" },
-      ];
     default:
       return [];
   }

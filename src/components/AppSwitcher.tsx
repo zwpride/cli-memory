@@ -7,7 +7,7 @@ interface AppSwitcherProps {
   onSwitch: (app: AppId) => void;
 }
 
-const ALL_APPS: AppId[] = ["claude", "codex", "gemini", "opencode", "openclaw"];
+const ALL_APPS: AppId[] = ["claude", "codex", "gemini", "opencode"];
 const STORAGE_KEY = "cli-memory-last-app";
 
 export function AppSwitcher({ activeApp, onSwitch }: AppSwitcherProps) {
@@ -21,14 +21,12 @@ export function AppSwitcher({ activeApp, onSwitch }: AppSwitcherProps) {
     codex: "openai",
     gemini: "gemini",
     opencode: "opencode",
-    openclaw: "openclaw",
   };
   const appDisplayName: Record<AppId, string> = {
     claude: "Claude",
     codex: "Codex",
     gemini: "Gemini",
     opencode: "OpenCode",
-    openclaw: "OpenClaw",
   };
 
   return (

@@ -83,7 +83,7 @@ export default function ToolsWorkspace({
   const skillsPageRef = useRef<any>(null);
   const unifiedSkillsPanelRef = useRef<any>(null);
 
-  const currentApp = activeApp === "openclaw" ? "claude" : activeApp;
+  const currentApp = activeApp;
 
   const renderActions = () => {
     switch (activeToolPanel) {

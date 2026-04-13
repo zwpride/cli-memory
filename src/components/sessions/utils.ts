@@ -45,7 +45,6 @@ export const getProviderLabel = (
   if (providerId === "claude") return "Claude Code";
   if (providerId === "gemini") return "Gemini CLI";
   if (providerId === "opencode") return "OpenCode";
-  if (providerId === "openclaw") return "OpenClaw";
   const key = `apps.${providerId}`;
   const translated = t(key);
   return translated === key ? providerId : translated;
@@ -56,7 +55,6 @@ export const getProviderIconName = (providerId: string) => {
   if (providerId === "codex") return "openai";
   if (providerId === "claude") return "claude";
   if (providerId === "opencode") return "opencode";
-  if (providerId === "openclaw") return "openclaw";
   return providerId;
 };
 

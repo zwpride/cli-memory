@@ -4,7 +4,6 @@ import {
   ClaudeIcon,
   CodexIcon,
   GeminiIcon,
-  OpenClawIcon,
 } from "@/components/BrandIcons";
 import { ProviderIcon } from "@/components/ProviderIcon";
 
@@ -20,7 +19,6 @@ export const APP_IDS: AppId[] = [
   "codex",
   "gemini",
   "opencode",
-  "openclaw",
 ];
 
 /** App IDs shown in MCP & Skills panels (excludes OpenClaw) */
@@ -70,13 +68,5 @@ export const APP_ICON_MAP: Record<AppId, AppConfig> = {
       "bg-indigo-500/10 ring-1 ring-indigo-500/20 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400",
     badgeClass:
       "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-500/20 border-0 gap-1.5",
-  },
-  openclaw: {
-    label: "OpenClaw",
-    icon: <OpenClawIcon size={14} />,
-    activeClass:
-      "bg-rose-500/10 ring-1 ring-rose-500/20 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400",
-    badgeClass:
-      "bg-rose-500/10 text-rose-700 dark:text-rose-300 hover:bg-rose-500/20 border-0 gap-1.5",
   },
 };

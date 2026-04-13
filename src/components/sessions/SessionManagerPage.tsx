@@ -168,7 +168,6 @@ type ProviderFilter =
   | "codex"
   | "claude"
   | "opencode"
-  | "openclaw"
   | "gemini";
 
 export function SessionManagerPage({ appId }: { appId: string }) {

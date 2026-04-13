@@ -286,11 +286,6 @@ pub fn read_project_configs(app: &str, project_dir: &str) -> Result<serde_json::
             (".opencode/config.json", "json"),
             (".opencode/instructions.md", "markdown"),
         ],
-        "openclaw" => vec![
-            ("OPENCLAW.md", "markdown"),
-            (".openclaw/config.json", "json"),
-            (".openclaw/openclaw.json", "json"),
-        ],
         _ => vec![],
     };
 
@@ -383,18 +378,6 @@ pub fn read_global_configs(app: &str) -> Result<serde_json::Value, String> {
                 }
             }
         }
-        "openclaw" => {
-            let dir = cc_switch::get_openclaw_dir();
-            let candidates = vec![
-                ("openclaw.json", "json"),
-            ];
-            for (name, ft) in candidates {
-                let full = dir.join(name);
-                if let Some(entry) = read_config_file_entry(name, &full, ft, "global") {
-                    files.push(entry);
-                }
-            }
-        }
         _ => {}
     }
 
@@ -411,7 +394,6 @@ pub fn write_config_file(file_path: &str, content: &str) -> Result<bool, String>
         || path_str.contains("/.codex/")
         || path_str.contains("/.gemini/")
         || path_str.contains("/.config/opencode/")
-        || path_str.contains("/.openclaw/")
         || path_str.contains("/.opencode/")
         || path_str.ends_with("/CLAUDE.md")
         || path_str.ends_with("/AGENTS.md")

@@ -19,7 +19,7 @@ const PANEL_STORAGE_KEY = "cli-memory-utility-panel";
 const PROJECT_DIR_KEY = "cli-memory-project-dir";
 const PERSISTENT_BASE_KEY = "cli-memory-persistent-base";
 
-const VALID_APPS: AppId[] = ["claude", "codex", "gemini", "opencode", "openclaw"];
+const VALID_APPS: AppId[] = ["claude", "codex", "gemini", "opencode"];
 type UtilityPanel =
   | "overview"
   | "usage"
@@ -239,9 +239,7 @@ const buildLocalConfigSections = (
       ? "settings.json"
       : appId === "opencode"
         ? "opencode.json"
-        : appId === "openclaw"
-          ? "openclaw.json"
-          : "config.json";
+        : "config.json";
 
   return [
     {
@@ -319,12 +317,11 @@ function App() {
   }, [persistentBase]);
 
   const hasUsageSupport =
-    activeApp === "claude" || activeApp === "codex" || activeApp === "gemini";
+    activeApp === "claude" || activeApp === "codex" || activeApp === "gemini" || activeApp === "opencode";
   const hasSessionSupport =
     activeApp === "claude" ||
     activeApp === "codex" ||
     activeApp === "opencode" ||
-    activeApp === "openclaw" ||
     activeApp === "gemini";
 
   // When switching apps, fall back to "overview" if current panel is unsupported
@@ -531,13 +528,15 @@ function App() {
 
   /** Map AppId to the usage API app filter string */
   const usageAppFilter =
-    activeApp === "claude" || activeApp === "openclaw"
+    activeApp === "claude"
       ? "claude"
       : activeApp === "codex"
         ? "codex"
         : activeApp === "gemini"
           ? "gemini"
-          : "all";
+          : activeApp === "opencode"
+            ? "opencode"
+            : "all";
 
   const primaryPageItems = [
     {
