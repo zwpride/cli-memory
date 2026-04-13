@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { AppSwitcher } from "@/components/AppSwitcher";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/components/theme-provider";
 import { settingsApi, type AppId, vscodeApi } from "@/lib/api";
@@ -823,136 +824,142 @@ function App() {
             ))}
           </div>
 
-          {/* ── Paths & detected info ── */}
-          <div className="app-panel-inset mt-3 px-4 py-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                  {t("settings.advanced.configDir.title", { defaultValue: "配置目录" })}
-                </div>
-                <div className="mt-2 break-all font-mono text-sm leading-6 text-foreground">
-                  {configDirError
-                    ? extractErrorMessage(configDirError)
-                    : configDir ?? t("common.loading", { defaultValue: "读取中" })}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                  {t("common.statusPath", { defaultValue: "状态路径" })}
-                </div>
-                <div className="mt-2 break-all font-mono text-sm leading-6 text-foreground">
-                  {configStatusError
-                    ? extractErrorMessage(configStatusError)
-                    : configStatus?.path ||
-                      t("common.noConfigDetected", {
-                        defaultValue: "未检测到可展示的配置内容",
-                      })}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-5 text-xs uppercase tracking-[0.16em] text-muted-foreground">
-              {t("common.detectedKeys", { defaultValue: "变量名 / 顶层键" })}
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {configKeySummary.length > 0 ? (
-                configKeySummary.map((label) => (
-                  <span key={label} className="liquid-pill">
-                    {label}
-                  </span>
-                ))
-              ) : (
-                <span className="text-sm text-muted-foreground">
-                  {t("common.noKeysDetected", { defaultValue: "没有可提取的键名" })}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* ── Symlink / persistent storage ── */}
-          {symlinkStatus?.items && symlinkStatus.items.length > 0 && (
-            <div className="mt-4">
-              <div className="mb-3 flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-foreground">
-                  {t("common.persistentLink", { defaultValue: "持久化链接" })}
-                </h3>
-                <Badge variant="outline" className={sectionBadgeClass}>Symlink</Badge>
-              </div>
-              <div className="app-panel-inset px-4 py-4">
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground shrink-0">
-                    {t("common.persistentBase", { defaultValue: "持久化目录" })}:
-                  </span>
-                  <input
-                    type="text"
-                    className="flex-1 min-w-0 rounded-lg border border-border bg-background px-2 py-1 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
-                    value={persistentBase}
-                    onChange={(e) => setPersistentBase(e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-2 sm:grid-cols-3">
-                  {symlinkStatus.items.map((item) => (
-                    <div key={item.app} className="flex items-center justify-between gap-2 rounded-lg border border-border/50 px-3 py-2">
-                      <div className="min-w-0">
-                        <div className="text-sm font-medium">{item.dirName}</div>
-                        <div className="text-xs text-muted-foreground truncate">
-                          {item.status === "linked"
-                            ? `→ ${item.linkTarget}`
-                            : item.status === "linked_other"
-                              ? `→ ${item.linkTarget} (其他)`
-                              : item.status === "local_dir"
-                                ? t("common.localDir", { defaultValue: "本地目录（未链接）" })
-                                : t("common.notFound", { defaultValue: "不存在" })}
-                        </div>
-                      </div>
-                      {item.status === "linked" ? (
-                        <Badge variant="outline" className="shrink-0 border-emerald-500/25 bg-emerald-500/10 text-emerald-700 text-xs">
-                          <Link2 className="mr-1 h-3 w-3" />OK
-                        </Badge>
-                      ) : (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-7 shrink-0 gap-1 text-xs"
-                          onClick={() => void handleCreateSymlink(item.app)}
-                        >
-                          <Link2 className="h-3 w-3" />
-                          {t("common.link", { defaultValue: "链接" })}
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── Global config files (editable, includes auth/credentials) ── */}
-          <div className="mt-4">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-foreground">
-                  {t("common.globalConfig", { defaultValue: "全局配置" })}
-                </h3>
-                <Badge variant="outline" className={sectionBadgeClass}>Global</Badge>
+          {/* ── Config tabs: paths / global / project ── */}
+          <Tabs defaultValue="paths" className="mt-3">
+            <TabsList className="app-segmented flex w-fit">
+              <TabsTrigger value="paths" className="app-tabs-trigger px-4 text-xs">
+                {t("common.pathsInfo", { defaultValue: "路径信息" })}
+              </TabsTrigger>
+              <TabsTrigger value="global" className="app-tabs-trigger px-4 text-xs">
+                {t("common.globalConfig", { defaultValue: "全局配置" })}
                 {globalConfigs?.files && (
-                  <span className="text-xs text-muted-foreground">
-                    {globalConfigs.files.length} {t("common.filesFound", { defaultValue: "个文件" })}
-                  </span>
+                  <Badge variant="outline" className="ml-1.5 text-[10px] px-1.5 py-0">{globalConfigs.files.length}</Badge>
                 )}
+              </TabsTrigger>
+              <TabsTrigger value="project" className="app-tabs-trigger px-4 text-xs">
+                {t("common.projectConfig", { defaultValue: "项目配置" })}
+              </TabsTrigger>
+            </TabsList>
+
+            {/* ── 路径信息 ── */}
+            <TabsContent value="paths" className="mt-3">
+              <div className="app-panel-inset px-4 py-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                      {t("settings.advanced.configDir.title", { defaultValue: "配置目录" })}
+                    </div>
+                    <div className="mt-2 break-all font-mono text-sm leading-6 text-foreground">
+                      {configDirError
+                        ? extractErrorMessage(configDirError)
+                        : configDir ?? t("common.loading", { defaultValue: "读取中" })}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                      {t("common.statusPath", { defaultValue: "状态路径" })}
+                    </div>
+                    <div className="mt-2 break-all font-mono text-sm leading-6 text-foreground">
+                      {configStatusError
+                        ? extractErrorMessage(configStatusError)
+                        : configStatus?.path ||
+                          t("common.noConfigDetected", {
+                            defaultValue: "未检测到可展示的配置内容",
+                          })}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-5 text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                  {t("common.detectedKeys", { defaultValue: "变量名 / 顶层键" })}
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {configKeySummary.length > 0 ? (
+                    configKeySummary.map((label) => (
+                      <span key={label} className="liquid-pill">
+                        {label}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      {t("common.noKeysDetected", { defaultValue: "没有可提取的键名" })}
+                    </span>
+                  )}
+                </div>
               </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-7 gap-1 text-xs"
-                onClick={() => void refetchGlobalConfigs()}
-                disabled={isGlobalConfigFetching}
-              >
-                <RefreshCw className={cn("h-3 w-3", isGlobalConfigFetching && "animate-spin")} />
-              </Button>
-            </div>
+
+              {/* Symlink / persistent storage */}
+              {symlinkStatus?.items && symlinkStatus.items.length > 0 && (
+                <div className="app-panel-inset mt-4 px-4 py-4">
+                  <div className="mb-3 flex items-center gap-2">
+                    <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                      {t("common.persistentLink", { defaultValue: "持久化链接" })}
+                    </h3>
+                  </div>
+                  <div className="mb-3 flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {t("common.persistentBase", { defaultValue: "持久化目录" })}:
+                    </span>
+                    <input
+                      type="text"
+                      className="flex-1 min-w-0 rounded-lg border border-border bg-background px-2 py-1 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                      value={persistentBase}
+                      onChange={(e) => setPersistentBase(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    {symlinkStatus.items.map((item) => (
+                      <div key={item.app} className="flex items-center justify-between gap-2 rounded-lg border border-border/50 px-3 py-2">
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium">{item.dirName}</div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {item.status === "linked"
+                              ? `→ ${item.linkTarget}`
+                              : item.status === "linked_other"
+                                ? `→ ${item.linkTarget} (其他)`
+                                : item.status === "local_dir"
+                                  ? t("common.localDir", { defaultValue: "本地目录（未链接）" })
+                                  : t("common.notFound", { defaultValue: "不存在" })}
+                          </div>
+                        </div>
+                        {item.status === "linked" ? (
+                          <Badge variant="outline" className="shrink-0 border-emerald-500/25 bg-emerald-500/10 text-emerald-700 text-xs">
+                            <Link2 className="mr-1 h-3 w-3" />OK
+                          </Badge>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-7 shrink-0 gap-1 text-xs"
+                            onClick={() => void handleCreateSymlink(item.app)}
+                          >
+                            <Link2 className="h-3 w-3" />
+                            {t("common.link", { defaultValue: "链接" })}
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+
+            {/* ── 全局配置 ── */}
+            <TabsContent value="global" className="mt-3">
+              <div className="flex items-center justify-end mb-3">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 gap-1 text-xs"
+                  onClick={() => void refetchGlobalConfigs()}
+                  disabled={isGlobalConfigFetching}
+                >
+                  <RefreshCw className={cn("h-3 w-3", isGlobalConfigFetching && "animate-spin")} />
+                  {t("common.refresh", { defaultValue: "刷新" })}
+                </Button>
+              </div>
             {!globalConfigs?.files || globalConfigs.files.length === 0 ? (
               <div className="app-panel-inset px-4 py-4 text-sm text-muted-foreground">
                 {t("common.noConfigPreview", {
@@ -1044,16 +1051,10 @@ function App() {
                 })}
               </div>
             )}
-          </div>
+            </TabsContent>
 
-          {/* ── Project directory selector ── */}
-          <div className="mt-6">
-            <div className="mb-3 flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-foreground">
-                {t("common.projectConfig", { defaultValue: "项目配置" })}
-              </h3>
-              <Badge variant="outline" className={sectionBadgeClass}>Project</Badge>
-            </div>
+            {/* ── 项目配置 ── */}
+            <TabsContent value="project" className="mt-3">
             <div className="app-panel-inset px-4 py-4">
               <div className="flex flex-wrap items-center gap-3">
                 <FolderGit2 className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -1168,7 +1169,8 @@ function App() {
                 </div>
               )}
             </div>
-          </div>
+            </TabsContent>
+          </Tabs>
         </section>
       </div>
     );
