@@ -24,17 +24,11 @@ vi.mock("sonner", () => ({
   },
 }));
 
-vi.mock("@/components/sessions/SessionToc", () => ({
-  SessionTocSidebar: () => null,
-  SessionTocDialog: () => null,
-}));
-
 vi.mock("@/components/ui/dialog", () => ({
   Dialog: ({ children, open }: any) => (open ? <div>{children}</div> : null),
   DialogContent: ({ children }: any) => (
     <div data-testid="session-dialog">{children}</div>
   ),
-  DialogHeader: ({ children }: any) => <div>{children}</div>,
   DialogTitle: ({ children, className }: any) => (
     <h2 className={className}>{children}</h2>
   ),

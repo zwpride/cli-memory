@@ -39,7 +39,6 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog";
@@ -54,13 +53,11 @@ import { cn } from "@/lib/utils";
 import { ProviderIcon } from "@/components/ProviderIcon";
 import { SessionItem } from "./SessionItem";
 import { SessionMessageItem } from "./SessionMessageItem";
-import { SessionTocDialog } from "./SessionToc";
 import {
   formatSessionTitle,
   formatTimestamp,
   getBaseName,
   getProviderIconName,
-  getProviderLabel,
   getSessionKey,
 } from "./utils";
 
@@ -189,7 +186,6 @@ export function SessionManagerPage({ appId }: { appId: string }) {
   const [activeMessageIndex, setActiveMessageIndex] = useState<number | null>(
     null,
   );
-  const [tocDialogOpen, setTocDialogOpen] = useState(false);
   const [deleteTargets, setDeleteTargets] = useState<SessionMeta[] | null>(
     null,
   );
@@ -289,8 +285,6 @@ export function SessionManagerPage({ appId }: { appId: string }) {
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
       setActiveMessageIndex(index);
-      setTocDialogOpen(false); // 关闭弹窗
-      // 清除高亮状态
       setTimeout(() => setActiveMessageIndex(null), 2000);
     }
   };
@@ -799,48 +793,29 @@ export function SessionManagerPage({ appId }: { appId: string }) {
             <DialogContent
               className="max-w-6xl w-[95vw] h-[90vh] p-0 gap-0 flex flex-col"
               zIndex="nested"
-              onInteractOutside={(e) => {
-                e.preventDefault();
-              }}
             >
               {selectedSession && (
                 <>
-                  {/* 弹窗头部 */}
-                  <DialogHeader className="px-5 py-3 border-b shrink-0">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0 flex-1">
-                        <DialogTitle className="flex items-center gap-2 text-base">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="shrink-0">
-                                <ProviderIcon
-                                  icon={getProviderIconName(
-                                    selectedSession.providerId,
-                                  )}
-                                  name={selectedSession.providerId}
-                                  size={20}
-                                />
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              {getProviderLabel(selectedSession.providerId, t)}
-                            </TooltipContent>
-                          </Tooltip>
-                          <span className="break-words">
-                            {formatSessionTitle(selectedSession)}
-                          </span>
+                  {/* 紧凑头部 */}
+                  <div className="flex items-center justify-between gap-3 px-5 py-2.5 border-b border-border-default bg-muted/20 shrink-0">
+                    {/* 左：标题 + 元信息 */}
+                    <div className="min-w-0 flex-1 flex items-center gap-3">
+                      <ProviderIcon
+                        icon={getProviderIconName(selectedSession.providerId)}
+                        name={selectedSession.providerId}
+                        size={22}
+                      />
+                      <div className="min-w-0">
+                        <DialogTitle className="text-sm font-semibold truncate">
+                          {formatSessionTitle(selectedSession)}
                         </DialogTitle>
-
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground mt-1">
-                          <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-0.5">
+                          <span className="flex items-center gap-1">
                             <Clock className="size-3" />
-                            <span>
-                              {formatTimestamp(
-                                selectedSession.lastActiveAt ??
-                                  selectedSession.createdAt,
-                              )}
-                            </span>
-                          </div>
+                            {formatTimestamp(
+                              selectedSession.lastActiveAt ?? selectedSession.createdAt,
+                            )}
+                          </span>
                           {selectedSession.projectDir && (
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -852,42 +827,33 @@ export function SessionManagerPage({ appId }: { appId: string }) {
                                       t("sessionManager.projectDirCopied"),
                                     )
                                   }
-                                  className="flex items-center gap-1 hover:text-foreground transition-colors"
+                                  className="flex items-center gap-1 hover:text-foreground transition-colors truncate max-w-[160px]"
                                 >
-                                  <FolderOpen className="size-3" />
-                                  <span className="truncate max-w-[200px]">
-                                    {getBaseName(selectedSession.projectDir)}
-                                  </span>
+                                  <FolderOpen className="size-3 shrink-0" />
+                                  {getBaseName(selectedSession.projectDir)}
                                 </button>
                               </TooltipTrigger>
-                              <TooltipContent
-                                side="bottom"
-                                className="max-w-xs"
-                              >
+                              <TooltipContent side="bottom" className="max-w-xs">
                                 <p className="font-mono text-xs break-all">
                                   {selectedSession.projectDir}
-                                </p>
-                                <p className="text-muted-foreground mt-1">
-                                  {t("sessionManager.clickToCopyPath")}
                                 </p>
                               </TooltipContent>
                             </Tooltip>
                           )}
-                          <Badge variant="secondary" className="text-xs">
-                            {messages.length} {t("sessionManager.messagesCount", { defaultValue: "条消息" })}
-                          </Badge>
+                          <span>{messages.length} {t("sessionManager.messagesCount", { defaultValue: "条消息" })}</span>
                         </div>
+                      </div>
+                    </div>
 
-                        {/* 恢复命令 */}
-                        {selectedSession.resumeCommand && (
-                          <div className="mt-2 flex items-center gap-2">
-                            <div className="flex-1 rounded-md bg-muted/60 px-3 py-1.5 font-mono text-xs text-muted-foreground truncate">
-                              {selectedSession.resumeCommand}
-                            </div>
+                    {/* 右：操作 + 关闭 */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {selectedSession.resumeCommand && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
                             <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-7 gap-1.5 shrink-0"
+                              variant="ghost"
+                              size="icon"
+                              className="size-8"
                               onClick={() =>
                                 void handleCopy(
                                   selectedSession.resumeCommand!,
@@ -897,68 +863,63 @@ export function SessionManagerPage({ appId }: { appId: string }) {
                                 )
                               }
                             >
-                              <Copy className="size-3" />
-                              {t("sessionManager.copyCommand", {
-                                defaultValue: "复制",
-                              })}
+                              <Copy className="size-3.5" />
                             </Button>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* 操作按钮 */}
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="gap-1.5"
-                          onClick={() => {
-                            const jsonl = exportSessionAsSftJsonl(messages, selectedSession);
-                            if (jsonl) {
-                              const fname = `${selectedSession.providerId}-${selectedSession.sessionId.slice(0, 8)}.jsonl`;
-                              downloadText(jsonl, fname);
-                              toast.success(t("sessionManager.exported", { defaultValue: "已导出 SFT JSONL" }));
-                            } else {
-                              toast.error(t("sessionManager.exportEmpty", { defaultValue: "无可导出的对话内容" }));
-                            }
-                          }}
-                          disabled={messages.length === 0}
-                        >
-                          <Download className="size-3.5" />
-                          <span className="hidden sm:inline">
-                            {t("sessionManager.exportSft", { defaultValue: "导出" })}
-                          </span>
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          className="gap-1.5"
-                          onClick={() =>
-                            setDeleteTargets([selectedSession])
-                          }
-                          disabled={
-                            !selectedSession.sourcePath || isDeleting
-                          }
-                        >
-                          <Trash2 className="size-3.5" />
-                          <span className="hidden sm:inline">
-                            {isDeleting
-                              ? t("sessionManager.deleting", {
-                                  defaultValue: "删除中...",
-                                })
-                              : t("sessionManager.delete", {
-                                  defaultValue: "删除",
-                                })}
-                          </span>
-                        </Button>
-                        <DialogClose asChild>
-                          <Button variant="ghost" size="sm" className="gap-1.5">
-                            <X className="size-3.5" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="font-mono text-xs">{selectedSession.resumeCommand}</p>
+                            <p className="text-muted-foreground text-[11px] mt-0.5">
+                              {t("sessionManager.clickToCopyCommand", { defaultValue: "点击复制恢复命令" })}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8"
+                            onClick={() => {
+                              const jsonl = exportSessionAsSftJsonl(messages, selectedSession);
+                              if (jsonl) {
+                                const fname = `${selectedSession.providerId}-${selectedSession.sessionId.slice(0, 8)}.jsonl`;
+                                downloadText(jsonl, fname);
+                                toast.success(t("sessionManager.exported", { defaultValue: "已导出 SFT JSONL" }));
+                              } else {
+                                toast.error(t("sessionManager.exportEmpty", { defaultValue: "无可导出的对话内容" }));
+                              }
+                            }}
+                            disabled={messages.length === 0}
+                          >
+                            <Download className="size-3.5" />
                           </Button>
-                        </DialogClose>
-                      </div>
+                        </TooltipTrigger>
+                        <TooltipContent>{t("sessionManager.exportSft", { defaultValue: "导出" })}</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 text-destructive hover:text-destructive"
+                            aria-label={t("sessionManager.delete", { defaultValue: "删除" })}
+                            onClick={() => setDeleteTargets([selectedSession])}
+                            disabled={!selectedSession.sourcePath || isDeleting}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>{t("sessionManager.delete", { defaultValue: "删除" })}</TooltipContent>
+                      </Tooltip>
+                      <div className="w-px h-5 bg-border mx-0.5" />
+                      <DialogClose asChild>
+                        <Button variant="ghost" size="icon" className="size-8">
+                          <X className="size-4" />
+                        </Button>
+                      </DialogClose>
                     </div>
-                  </DialogHeader>
+                  </div>
 
                   {/* 消息列表 + 对话目录 */}
                   <div className="flex flex-1 min-h-0" ref={detailRef}>
@@ -1004,29 +965,39 @@ export function SessionManagerPage({ appId }: { appId: string }) {
                       </div>
                     </ScrollArea>
 
-                    {/* 对话目录 - 固定在右侧，永远可见 */}
+                    {/* 对话目录 - 固定在右侧，带高亮 */}
                     {userMessagesToc.length > 0 && (
-                      <div className="w-56 border-l shrink-0 flex flex-col">
-                        <div className="p-3 border-b shrink-0">
+                      <div className="w-52 border-l shrink-0 flex flex-col bg-muted/30">
+                        <div className="px-3 py-2 border-b shrink-0">
                           <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                             <List className="size-3.5" />
                             <span>{t("sessionManager.tocTitle")}</span>
+                            <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0">
+                              {userMessagesToc.length}
+                            </Badge>
                           </div>
                         </div>
                         <ScrollArea className="flex-1 min-h-0">
-                          <div className="p-2 space-y-0.5">
+                          <div className="p-1.5 space-y-0.5">
                             {userMessagesToc.map((item, tocIndex) => (
                               <button
                                 key={item.index}
                                 type="button"
                                 onClick={() => scrollToMessage(item.index)}
                                 className={cn(
-                                  "w-full text-left px-2 py-1.5 rounded text-xs transition-colors",
-                                  "hover:bg-muted/80 text-muted-foreground hover:text-foreground",
+                                  "w-full text-left px-2 py-1.5 rounded-md text-xs transition-all",
                                   "flex items-start gap-2",
+                                  activeMessageIndex === item.index
+                                    ? "bg-primary/10 text-primary font-medium"
+                                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
                                 )}
                               >
-                                <span className="shrink-0 w-4 h-4 rounded-full bg-primary/10 text-primary text-[10px] flex items-center justify-center font-medium">
+                                <span className={cn(
+                                  "shrink-0 w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-medium",
+                                  activeMessageIndex === item.index
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-primary/10 text-primary",
+                                )}>
                                   {tocIndex + 1}
                                 </span>
                                 <span className="line-clamp-2 leading-snug">{item.preview}</span>
@@ -1036,14 +1007,6 @@ export function SessionManagerPage({ appId }: { appId: string }) {
                         </ScrollArea>
                       </div>
                     )}
-
-                    {/* 小屏幕浮动目录按钮 */}
-                    <SessionTocDialog
-                      items={userMessagesToc}
-                      onItemClick={scrollToMessage}
-                      open={tocDialogOpen}
-                      onOpenChange={setTocDialogOpen}
-                    />
                   </div>
                 </>
               )}
