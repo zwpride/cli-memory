@@ -184,14 +184,16 @@ export function UsageDashboard({
               <div className="flex items-center gap-1.5">
                 <input
                   type="datetime-local"
-                  className="h-8 rounded-md border border-border bg-background px-1.5 text-xs leading-none focus:outline-none focus:ring-1 focus:ring-primary/50"
+                  className="box-border rounded-md border border-border bg-background px-1.5 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
+                  style={{ height: 32, lineHeight: 1 }}
                   value={customStart}
                   onChange={(e) => setCustomStart(e.target.value)}
                 />
                 <span className="text-xs text-muted-foreground">→</span>
                 <input
                   type="datetime-local"
-                  className="h-8 rounded-md border border-border bg-background px-1.5 text-xs leading-none focus:outline-none focus:ring-1 focus:ring-primary/50"
+                  className="box-border rounded-md border border-border bg-background px-1.5 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
+                  style={{ height: 32, lineHeight: 1 }}
                   value={customEnd}
                   onChange={(e) => setCustomEnd(e.target.value)}
                 />
