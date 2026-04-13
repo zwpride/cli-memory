@@ -337,6 +337,9 @@ pub fn read_global_configs(app: &str) -> Result<serde_json::Value, String> {
             // Scan ~/.claude/commands/
             let cmds_dir = dir.join("commands");
             files.extend(scan_config_dir(&cmds_dir, "commands", "markdown", "global"));
+            // Scan ~/.claude/agents/
+            let agents_dir = dir.join("agents");
+            files.extend(scan_config_dir(&agents_dir, "agents", "markdown", "global"));
         }
         "codex" => {
             let dir = cc_switch::get_codex_config_dir();

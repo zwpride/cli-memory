@@ -24,6 +24,7 @@ function getAgentFiles(appId: AppId): Array<{ path: string; label: string; descr
         { path: "CLAUDE.md", label: "CLAUDE.md", description: "项目级 Agent 指令" },
         { path: ".claude/settings.json", label: ".claude/settings.json", description: "项目配置" },
         { path: ".claude/commands", label: ".claude/commands/", description: "自定义斜杠命令" },
+        { path: ".claude/agents", label: ".claude/agents/", description: "自定义子智能体" },
       ];
     case "codex":
       return [
@@ -61,9 +62,10 @@ export function AgentsPanel({ appId }: AgentsPanelProps) {
     retry: false,
   });
 
-  // Also load global agent files (e.g., ~/.codex/instructions.md)
+  // Also load global agent files (e.g., ~/.claude/agents/, ~/.codex/instructions.md)
   const { data: globalConfigs } = useQuery({
     queryKey: ["globalConfigs", appId],
+    queryFn: () => vscodeApi.readGlobalConfigs(appId),
   });
 
   const handleSave = useCallback(async (filePath: string, content: string) => {
