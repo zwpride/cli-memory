@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BarChart3, Check, Eye, EyeOff, FolderGit2, FolderArchive, LayoutGrid, Link2, MessageSquare, Moon, Pencil, RefreshCw, Save, Sun } from "lucide-react";
+import { BarChart3, Check, ChevronRight, Eye, EyeOff, FolderGit2, FolderArchive, LayoutGrid, Link2, MessageSquare, Moon, Pencil, RefreshCw, Save, Sun } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppSwitcher } from "@/components/AppSwitcher";
@@ -300,6 +300,7 @@ function App() {
   const [editingFile, setEditingFile] = useState<string | null>(null);
   const [editContent, setEditContent] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
+  const [expandedConfigFiles, setExpandedConfigFiles] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     localStorage.setItem(PANEL_STORAGE_KEY, utilityPanel);
@@ -967,9 +968,10 @@ function App() {
                 })}
               </div>
             ) : (
-              <div className="grid gap-3">
+              <div className="space-y-1">
                 {globalConfigs.files.map((file) => {
                   const isFileEditing = editingFile === file.fullPath;
+                  const isExpanded = expandedConfigFiles.has(file.fullPath) || isFileEditing;
                   const displayContent = showRawValues
                     ? (file.content ?? "")
                     : (file.fileType === "json" && file.content
@@ -987,63 +989,76 @@ function App() {
                           : (file.content ?? ""));
 
                   return (
-                    <div key={file.fullPath} className="app-panel-inset px-4 py-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-foreground">{file.path}</span>
-                          <span className="liquid-pill text-xs">{file.fileType}</span>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 gap-1 text-xs"
-                          onClick={() => {
-                            if (isFileEditing) {
-                              setEditingFile(null);
-                            } else {
-                              setEditingFile(file.fullPath);
-                              setEditContent(file.content ?? "");
-                            }
-                          }}
-                        >
-                          {isFileEditing ? <Check className="h-3 w-3" /> : <Pencil className="h-3 w-3" />}
-                          {isFileEditing
-                            ? t("common.cancel", { defaultValue: "取消" })
-                            : t("common.edit", { defaultValue: "编辑" })}
-                        </Button>
-                      </div>
-                      <div className="mt-1 text-xs text-muted-foreground break-all">{file.fullPath}</div>
-                      {file.error ? (
-                        <div className="mt-2 text-xs text-red-500">{file.error}</div>
-                      ) : isFileEditing ? (
-                        <div className="mt-3">
-                          <textarea
-                            className="w-full rounded-xl border border-border bg-slate-950/[0.92] p-4 font-mono text-[12px] leading-6 text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50"
-                            rows={Math.min(Math.max((editContent.split("\n").length) + 2, 6), 30)}
-                            value={editContent}
-                            onChange={(e) => setEditContent(e.target.value)}
-                          />
-                          <div className="mt-2 flex justify-end">
+                    <div key={file.fullPath} className="rounded-lg border border-border/50">
+                      <button
+                        type="button"
+                        className="flex w-full items-center gap-2 px-3 py-2.5 text-left hover:bg-muted/40 rounded-lg transition-colors"
+                        onClick={() => setExpandedConfigFiles((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(file.fullPath)) next.delete(file.fullPath); else next.add(file.fullPath);
+                          return next;
+                        })}
+                      >
+                        <ChevronRight className={cn("h-3.5 w-3.5 text-muted-foreground shrink-0 transition-transform", isExpanded && "rotate-90")} />
+                        <span className="text-sm font-medium truncate">{file.path}</span>
+                        <span className="liquid-pill text-[10px]">{file.fileType}</span>
+                      </button>
+                      {isExpanded && (
+                        <div className="px-3 pb-3">
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span className="text-[11px] text-muted-foreground break-all">{file.fullPath}</span>
                             <Button
                               type="button"
+                              variant="ghost"
                               size="sm"
-                              className="gap-1.5"
-                              disabled={isSaving}
-                              onClick={() => void handleSaveConfigFile(file.fullPath, editContent)}
+                              className="h-7 gap-1 text-xs shrink-0"
+                              onClick={() => {
+                                if (isFileEditing) {
+                                  setEditingFile(null);
+                                } else {
+                                  setEditingFile(file.fullPath);
+                                  setEditContent(file.content ?? "");
+                                }
+                              }}
                             >
-                              <Save className="h-3.5 w-3.5" />
-                              {isSaving
-                                ? t("common.saving", { defaultValue: "保存中..." })
-                                : t("common.save", { defaultValue: "保存" })}
+                              {isFileEditing ? <Check className="h-3 w-3" /> : <Pencil className="h-3 w-3" />}
+                              {isFileEditing
+                                ? t("common.cancel", { defaultValue: "取消" })
+                                : t("common.edit", { defaultValue: "编辑" })}
                             </Button>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="mt-3 rounded-lg border border-black/[0.08] bg-slate-950/[0.92] p-4 dark:border-white/[0.08]">
-                          <pre className="overflow-x-auto whitespace-pre-wrap break-all font-mono text-[12px] leading-6 text-slate-100">
-                            {displayContent}
-                          </pre>
+                          {file.error ? (
+                            <div className="text-xs text-red-500">{file.error}</div>
+                          ) : isFileEditing ? (
+                            <div>
+                              <textarea
+                                className="w-full rounded-lg border border-border bg-slate-950/[0.92] p-3 font-mono text-[12px] leading-6 text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                rows={Math.min(Math.max((editContent.split("\n").length) + 2, 6), 30)}
+                                value={editContent}
+                                onChange={(e) => setEditContent(e.target.value)}
+                              />
+                              <div className="mt-2 flex justify-end">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  className="gap-1.5"
+                                  disabled={isSaving}
+                                  onClick={() => void handleSaveConfigFile(file.fullPath, editContent)}
+                                >
+                                  <Save className="h-3.5 w-3.5" />
+                                  {isSaving
+                                    ? t("common.saving", { defaultValue: "保存中..." })
+                                    : t("common.save", { defaultValue: "保存" })}
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="rounded-lg border border-black/[0.08] bg-slate-950/[0.92] p-3 dark:border-white/[0.08]">
+                              <pre className="overflow-x-auto whitespace-pre-wrap break-all font-mono text-[12px] leading-6 text-slate-100">
+                                {displayContent}
+                              </pre>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1094,67 +1109,81 @@ function App() {
 
               {/* Project config files */}
               {selectedProjectDir && projectConfigs?.files && projectConfigs.files.length > 0 && (
-                <div className="mt-4 grid gap-3">
+                <div className="mt-4 space-y-1">
                   {projectConfigs.files.map((file) => {
                     const isEditing2 = editingFile === file.fullPath;
+                    const isExpanded2 = expandedConfigFiles.has(file.fullPath) || isEditing2;
 
                     return (
-                      <div key={file.path} className="rounded-xl border border-border/50 p-3">
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-foreground">{file.path}</span>
-                            <span className="liquid-pill text-xs">{file.fileType}</span>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 gap-1 text-xs"
-                            onClick={() => {
-                              if (isEditing2) {
-                                setEditingFile(null);
-                              } else {
-                                setEditingFile(file.fullPath);
-                                setEditContent(file.content ?? "");
-                              }
-                            }}
-                          >
-                            {isEditing2 ? <Check className="h-3 w-3" /> : <Pencil className="h-3 w-3" />}
-                            {isEditing2
-                              ? t("common.cancel", { defaultValue: "取消" })
-                              : t("common.edit", { defaultValue: "编辑" })}
-                          </Button>
-                        </div>
-                        {file.error ? (
-                          <div className="mt-2 text-xs text-red-500">{file.error}</div>
-                        ) : isEditing2 ? (
-                          <div className="mt-2">
-                            <textarea
-                              className="w-full rounded-lg border border-border bg-slate-950/[0.92] p-3 font-mono text-[12px] leading-6 text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50"
-                              rows={Math.min(Math.max((editContent.split("\n").length) + 2, 6), 30)}
-                              value={editContent}
-                              onChange={(e) => setEditContent(e.target.value)}
-                            />
-                            <div className="mt-2 flex justify-end">
+                      <div key={file.path} className="rounded-lg border border-border/50">
+                        <button
+                          type="button"
+                          className="flex w-full items-center gap-2 px-3 py-2.5 text-left hover:bg-muted/40 rounded-lg transition-colors"
+                          onClick={() => setExpandedConfigFiles((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(file.fullPath)) next.delete(file.fullPath); else next.add(file.fullPath);
+                            return next;
+                          })}
+                        >
+                          <ChevronRight className={cn("h-3.5 w-3.5 text-muted-foreground shrink-0 transition-transform", isExpanded2 && "rotate-90")} />
+                          <span className="text-sm font-medium truncate">{file.path}</span>
+                          <span className="liquid-pill text-[10px]">{file.fileType}</span>
+                        </button>
+                        {isExpanded2 && (
+                          <div className="px-3 pb-3">
+                            <div className="flex justify-end mb-1">
                               <Button
                                 type="button"
+                                variant="ghost"
                                 size="sm"
-                                className="gap-1.5"
-                                disabled={isSaving}
-                                onClick={() => void handleSaveConfigFile(file.fullPath, editContent)}
+                                className="h-7 gap-1 text-xs"
+                                onClick={() => {
+                                  if (isEditing2) {
+                                    setEditingFile(null);
+                                  } else {
+                                    setEditingFile(file.fullPath);
+                                    setEditContent(file.content ?? "");
+                                  }
+                                }}
                               >
-                                <Save className="h-3.5 w-3.5" />
-                                {isSaving
-                                  ? t("common.saving", { defaultValue: "保存中..." })
-                                  : t("common.save", { defaultValue: "保存" })}
+                                {isEditing2 ? <Check className="h-3 w-3" /> : <Pencil className="h-3 w-3" />}
+                                {isEditing2
+                                  ? t("common.cancel", { defaultValue: "取消" })
+                                  : t("common.edit", { defaultValue: "编辑" })}
                               </Button>
                             </div>
-                          </div>
-                        ) : (
-                          <div className="mt-2 rounded-lg bg-slate-950/[0.92] p-3">
-                            <pre className="overflow-x-auto whitespace-pre-wrap break-all font-mono text-[12px] leading-6 text-slate-100">
-                              {file.content ?? ""}
-                            </pre>
+                            {file.error ? (
+                              <div className="text-xs text-red-500">{file.error}</div>
+                            ) : isEditing2 ? (
+                              <div>
+                                <textarea
+                                  className="w-full rounded-lg border border-border bg-slate-950/[0.92] p-3 font-mono text-[12px] leading-6 text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                  rows={Math.min(Math.max((editContent.split("\n").length) + 2, 6), 30)}
+                                  value={editContent}
+                                  onChange={(e) => setEditContent(e.target.value)}
+                                />
+                                <div className="mt-2 flex justify-end">
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    className="gap-1.5"
+                                    disabled={isSaving}
+                                    onClick={() => void handleSaveConfigFile(file.fullPath, editContent)}
+                                  >
+                                    <Save className="h-3.5 w-3.5" />
+                                    {isSaving
+                                      ? t("common.saving", { defaultValue: "保存中..." })
+                                      : t("common.save", { defaultValue: "保存" })}
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="rounded-lg border border-black/[0.08] bg-slate-950/[0.92] p-3 dark:border-white/[0.08]">
+                                <pre className="overflow-x-auto whitespace-pre-wrap break-all font-mono text-[12px] leading-6 text-slate-100">
+                                  {file.content ?? ""}
+                                </pre>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
