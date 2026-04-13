@@ -28,7 +28,7 @@ export function SessionTocSidebar({
   onItemClick,
 }: SessionTocSidebarProps) {
   const { t } = useTranslation();
-  if (items.length <= 2) return null;
+  if (items.length === 0) return null;
 
   return (
     <div className="w-64 border-l shrink-0 hidden xl:flex flex-col">
@@ -77,7 +77,7 @@ export function SessionTocDialog({
   onOpenChange,
 }: SessionTocDialogProps) {
   const { t } = useTranslation();
-  if (items.length <= 2) return null;
+  if (items.length === 0) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

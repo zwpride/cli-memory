@@ -1005,8 +1005,8 @@ export function SessionManagerPage({ appId }: { appId: string }) {
                     </ScrollArea>
 
                     {/* 对话目录 - 固定在右侧，永远可见 */}
-                    {userMessagesToc.length > 2 && (
-                      <div className="w-56 border-l shrink-0 hidden lg:flex flex-col">
+                    {userMessagesToc.length > 0 && (
+                      <div className="w-56 border-l shrink-0 flex flex-col">
                         <div className="p-3 border-b shrink-0">
                           <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                             <List className="size-3.5" />
