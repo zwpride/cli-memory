@@ -171,42 +171,46 @@ export function UsageDashboard({
         </div>
       </div>
 
-      {/* ── Data source bar ── */}
-      <Suspense fallback={barFallback}>
-        <DataSourceBar refreshIntervalMs={refreshIntervalMs} />
-      </Suspense>
-
-      {/* ── Summary cards ── */}
-      <Suspense fallback={cardFallback}>
-        <UsageSummaryCards
-          days={deferredDays}
-          appType={deferredAppType}
-          refreshIntervalMs={refreshIntervalMs}
-        />
-      </Suspense>
-
-      {/* ── Trend chart ── */}
-      <Suspense fallback={chartFallback}>
-        <UsageTrendChart
-          days={deferredDays}
-          appType={deferredAppType}
-          refreshIntervalMs={refreshIntervalMs}
-        />
-      </Suspense>
-
-      {/* ── Detail tabs: Logs / Provider Stats / Model Stats ── */}
-      <Tabs defaultValue="logs" className="w-full">
+      {/* ── Unified 4-tab view, all sharing the same time range ── */}
+      <Tabs defaultValue="overview" className="w-full">
         <TabsList className="app-segmented flex h-10 w-fit">
+          <TabsTrigger value="overview" className="app-tabs-trigger px-4">
+            {t("usage.overview", { defaultValue: "总览" })}
+          </TabsTrigger>
+          <TabsTrigger value="trends" className="app-tabs-trigger px-4">
+            {t("usage.trends", { defaultValue: "趋势" })}
+          </TabsTrigger>
           <TabsTrigger value="logs" className="app-tabs-trigger px-4">
             {t("usage.requestLogs", { defaultValue: "请求日志" })}
           </TabsTrigger>
-          <TabsTrigger value="providers" className="app-tabs-trigger px-4">
-            {t("usage.providerStats", { defaultValue: "供应商统计" })}
-          </TabsTrigger>
-          <TabsTrigger value="models" className="app-tabs-trigger px-4">
-            {t("usage.modelStats", { defaultValue: "模型统计" })}
+          <TabsTrigger value="stats" className="app-tabs-trigger px-4">
+            {t("usage.stats", { defaultValue: "统计" })}
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="overview" className="mt-4 space-y-6">
+          <Suspense fallback={barFallback}>
+            <DataSourceBar refreshIntervalMs={refreshIntervalMs} />
+          </Suspense>
+          <Suspense fallback={cardFallback}>
+            <UsageSummaryCards
+              days={deferredDays}
+              appType={deferredAppType}
+              refreshIntervalMs={refreshIntervalMs}
+            />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="trends" className="mt-4">
+          <Suspense fallback={chartFallback}>
+            <UsageTrendChart
+              days={deferredDays}
+              appType={deferredAppType}
+              refreshIntervalMs={refreshIntervalMs}
+            />
+          </Suspense>
+        </TabsContent>
+
         <TabsContent value="logs" className="mt-4">
           <Suspense fallback={tableFallback}>
             <RequestLogTable
@@ -215,21 +219,32 @@ export function UsageDashboard({
             />
           </Suspense>
         </TabsContent>
-        <TabsContent value="providers" className="mt-4">
-          <Suspense fallback={tableFallback}>
-            <ProviderStatsTable
-              appType={deferredAppType}
-              refreshIntervalMs={refreshIntervalMs}
-            />
-          </Suspense>
-        </TabsContent>
-        <TabsContent value="models" className="mt-4">
-          <Suspense fallback={tableFallback}>
-            <ModelStatsTable
-              appType={deferredAppType}
-              refreshIntervalMs={refreshIntervalMs}
-            />
-          </Suspense>
+
+        <TabsContent value="stats" className="mt-4">
+          <div className="grid gap-6 xl:grid-cols-2">
+            <div className="space-y-2">
+              <h3 className="px-1 text-sm font-semibold text-foreground">
+                {t("usage.providerStats", { defaultValue: "供应商统计" })}
+              </h3>
+              <Suspense fallback={tableFallback}>
+                <ProviderStatsTable
+                  appType={deferredAppType}
+                  refreshIntervalMs={refreshIntervalMs}
+                />
+              </Suspense>
+            </div>
+            <div className="space-y-2">
+              <h3 className="px-1 text-sm font-semibold text-foreground">
+                {t("usage.modelStats", { defaultValue: "模型统计" })}
+              </h3>
+              <Suspense fallback={tableFallback}>
+                <ModelStatsTable
+                  appType={deferredAppType}
+                  refreshIntervalMs={refreshIntervalMs}
+                />
+              </Suspense>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </motion.div>
