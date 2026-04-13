@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Copy,
+  Download,
   RefreshCw,
   Search,
   Trash2,
@@ -27,7 +28,7 @@ import {
   useSessionsQuery,
 } from "@/lib/query";
 import { sessionsApi } from "@/lib/api";
-import type { SessionMeta } from "@/types";
+import type { SessionMeta, SessionMessage } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +55,112 @@ import {
   getProviderLabel,
   getSessionKey,
 } from "./utils";
+
+/** Convert session messages to SFT training JSONL format */
+function exportSessionAsSftJsonl(
+  messages: SessionMessage[],
+  sessionMeta?: SessionMeta | null,
+): string {
+  const sftMessages: Array<Record<string, unknown>> = [];
+
+  for (const msg of messages) {
+    const role = msg.role.toLowerCase();
+
+    if (role === "system") {
+      sftMessages.push({
+        role: "system",
+        content: msg.content,
+      });
+    } else if (role === "user") {
+      sftMessages.push({
+        role: "user",
+        content: msg.content,
+      });
+    } else if (role === "assistant") {
+      const entry: Record<string, unknown> = {
+        role: "assistant",
+        reasoning_content: msg.thinking ?? null,
+        reasoning_content_mask: false,
+        content: msg.content,
+        content_mask: false,
+      };
+
+      if (msg.toolCalls && msg.toolCalls.length > 0) {
+        entry.tool_calls = msg.toolCalls.map((tc) => ({
+          id: tc.id ?? "",
+          type: "function",
+          function: {
+            name: tc.name ?? "",
+            arguments: tc.arguments ?? "{}",
+          },
+        }));
+      }
+
+      sftMessages.push(entry);
+    } else if (role === "tool") {
+      sftMessages.push({
+        role: "tool",
+        content: msg.content,
+        content_mask: true,
+      });
+    }
+  }
+
+  // Ensure ends with assistant (SFT requirement)
+  if (sftMessages.length > 0 && sftMessages[sftMessages.length - 1].role !== "assistant") {
+    // Remove trailing non-assistant messages
+    while (sftMessages.length > 0 && sftMessages[sftMessages.length - 1].role !== "assistant") {
+      sftMessages.pop();
+    }
+  }
+
+  if (sftMessages.length === 0) return "";
+
+  // Extract tools definitions from tool_calls
+  const toolNames = new Set<string>();
+  const tools: Array<Record<string, unknown>> = [];
+  for (const msg of sftMessages) {
+    if (msg.tool_calls && Array.isArray(msg.tool_calls)) {
+      for (const tc of msg.tool_calls as Array<{ function?: { name?: string } }>) {
+        const name = tc.function?.name;
+        if (name && !toolNames.has(name)) {
+          toolNames.add(name);
+          tools.push({
+            type: "function",
+            function: { name, description: "", parameters: { type: "object", properties: {} } },
+          });
+        }
+      }
+    }
+  }
+
+  const sample: Record<string, unknown> = { messages: sftMessages };
+  if (tools.length > 0) {
+    sample.tools = tools;
+  }
+
+  // Add metadata as comment-safe fields
+  if (sessionMeta) {
+    sample._meta = {
+      provider: sessionMeta.providerId,
+      sessionId: sessionMeta.sessionId,
+      title: sessionMeta.title,
+      projectDir: sessionMeta.projectDir,
+    };
+  }
+
+  return JSON.stringify(sample);
+}
+
+function downloadText(content: string, filename: string) {
+  const blob = new Blob([content], { type: "application/jsonl" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 
 type ProviderFilter =
@@ -571,7 +678,7 @@ export function SessionManagerPage({ appId }: { appId: string }) {
             </div>
           </div>
 
-          <div className="flex-1 overflow-hidden grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
+          <div className="flex-1 overflow-hidden grid gap-4 xl:grid-cols-[480px_minmax(0,1fr)]">
             {/* 左侧会话列表 */}
             <Card className="flex flex-col flex-1 min-h-0 overflow-hidden">
               <CardHeader className="border-b px-4 py-4">
@@ -768,6 +875,27 @@ export function SessionManagerPage({ appId }: { appId: string }) {
 
                       {/* 右侧：操作按钮组 */}
                       <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1.5"
+                          onClick={() => {
+                            const jsonl = exportSessionAsSftJsonl(messages, selectedSession);
+                            if (jsonl) {
+                              const fname = `${selectedSession.providerId}-${selectedSession.sessionId.slice(0, 8)}.jsonl`;
+                              downloadText(jsonl, fname);
+                              toast.success(t("sessionManager.exported", { defaultValue: "已导出 SFT JSONL" }));
+                            } else {
+                              toast.error(t("sessionManager.exportEmpty", { defaultValue: "无可导出的对话内容" }));
+                            }
+                          }}
+                          disabled={messages.length === 0}
+                        >
+                          <Download className="size-3.5" />
+                          <span className="hidden sm:inline">
+                            {t("sessionManager.exportSft", { defaultValue: "导出" })}
+                          </span>
+                        </Button>
                         <Button
                           size="sm"
                           variant="destructive"

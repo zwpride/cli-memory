@@ -61,7 +61,7 @@ const ToolsWorkspace = lazy(loadToolsWorkspace);
 const SENSITIVE_KEY_PATTERN =
   /(token|secret|password|api[_-]?key|auth|cookie|session|credential|private[_-]?key)/i;
 const pageContainerClass =
-  "mx-auto flex w-full max-w-[1720px] flex-1 flex-col gap-5 px-4 pb-8 md:px-6 md:pb-10";
+  "mx-auto flex w-full flex-1 flex-col gap-5 px-4 pb-8 md:px-6 lg:px-10 md:pb-10";
 const toolbarNavButtonClass =
   "app-segmented-item h-9 shrink-0 px-3 text-[13px] font-medium";
 const sectionBadgeClass =
@@ -1269,8 +1269,8 @@ function App() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-primary/30">
-      <header className="sticky top-0 z-40 px-4 pt-4">
-        <div className="app-toolbar-shell mx-auto flex h-[60px] max-w-[1720px] items-center justify-between gap-3 px-3 md:px-4">
+      <header className="sticky top-0 z-40 px-3 pt-4 md:px-5 lg:px-8">
+        <div className="app-toolbar-shell mx-auto flex h-[60px] items-center justify-between gap-3 px-3 md:px-4">
           <span className="text-lg font-semibold tracking-tight text-foreground">
             CLI Memory
           </span>
