@@ -677,9 +677,9 @@ export function SessionManagerPage({ appId }: { appId: string }) {
             </div>
           </div>
 
-          <div className="flex-1 overflow-hidden grid gap-4 xl:grid-cols-[480px_minmax(0,1fr)]">
+          <div className="flex-1 grid gap-4 xl:grid-cols-[480px_minmax(0,1fr)]">
             {/* 左侧会话列表 */}
-            <Card className="flex flex-col min-h-0 overflow-hidden xl:sticky xl:top-4 xl:self-start xl:max-h-[calc(100vh-180px)]">
+            <Card className="flex flex-col overflow-hidden xl:sticky xl:top-20 xl:self-start xl:max-h-[calc(100vh-120px)] min-h-[300px]">
               <CardHeader className="border-b px-4 py-4">
                 <div className="flex items-center justify-between gap-3">
                   <CardTitle className="text-sm font-medium whitespace-nowrap">

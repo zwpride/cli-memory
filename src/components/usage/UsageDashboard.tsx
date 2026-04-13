@@ -13,7 +13,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQueryClient } from "@tanstack/react-query";
 import { usageKeys } from "@/lib/query/usage";
 import { cn } from "@/lib/utils";
@@ -194,39 +194,44 @@ export function UsageDashboard({
         />
       </Suspense>
 
-      {/* ── Request logs ── */}
-      <Suspense fallback={tableFallback}>
-        <RequestLogTable
-          appType={deferredAppType}
-          refreshIntervalMs={refreshIntervalMs}
-        />
-      </Suspense>
-
-      {/* ── Provider stats + Model stats side-by-side ── */}
-      <div className="grid gap-6 xl:grid-cols-2">
-        <div className="space-y-2">
-          <h3 className="px-1 text-sm font-semibold text-foreground">
-            {t("usage.providerStats")}
-          </h3>
+      {/* ── Detail tabs: Logs / Provider Stats / Model Stats ── */}
+      <Tabs defaultValue="logs" className="w-full">
+        <TabsList className="app-segmented flex h-10 w-fit">
+          <TabsTrigger value="logs" className="app-tabs-trigger px-4">
+            {t("usage.requestLogs", { defaultValue: "请求日志" })}
+          </TabsTrigger>
+          <TabsTrigger value="providers" className="app-tabs-trigger px-4">
+            {t("usage.providerStats", { defaultValue: "供应商统计" })}
+          </TabsTrigger>
+          <TabsTrigger value="models" className="app-tabs-trigger px-4">
+            {t("usage.modelStats", { defaultValue: "模型统计" })}
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="logs" className="mt-4">
+          <Suspense fallback={tableFallback}>
+            <RequestLogTable
+              appType={deferredAppType}
+              refreshIntervalMs={refreshIntervalMs}
+            />
+          </Suspense>
+        </TabsContent>
+        <TabsContent value="providers" className="mt-4">
           <Suspense fallback={tableFallback}>
             <ProviderStatsTable
               appType={deferredAppType}
               refreshIntervalMs={refreshIntervalMs}
             />
           </Suspense>
-        </div>
-        <div className="space-y-2">
-          <h3 className="px-1 text-sm font-semibold text-foreground">
-            {t("usage.modelStats")}
-          </h3>
+        </TabsContent>
+        <TabsContent value="models" className="mt-4">
           <Suspense fallback={tableFallback}>
             <ModelStatsTable
               appType={deferredAppType}
               refreshIntervalMs={refreshIntervalMs}
             />
           </Suspense>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </motion.div>
   );
 }
