@@ -184,18 +184,18 @@ export function UsageDashboard({
               <div className="flex items-center gap-1.5">
                 <input
                   type="datetime-local"
-                  className="h-7 rounded-md border border-border bg-background px-1.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-primary/50"
+                  className="h-8 rounded-md border border-border bg-background px-1.5 text-xs leading-none focus:outline-none focus:ring-1 focus:ring-primary/50"
                   value={customStart}
                   onChange={(e) => setCustomStart(e.target.value)}
                 />
-                <span className="text-[11px] text-muted-foreground">→</span>
+                <span className="text-xs text-muted-foreground">→</span>
                 <input
                   type="datetime-local"
-                  className="h-7 rounded-md border border-border bg-background px-1.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-primary/50"
+                  className="h-8 rounded-md border border-border bg-background px-1.5 text-xs leading-none focus:outline-none focus:ring-1 focus:ring-primary/50"
                   value={customEnd}
                   onChange={(e) => setCustomEnd(e.target.value)}
                 />
-                <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                <span className="text-[11px] text-muted-foreground whitespace-nowrap">
                   {days}{t("usage.daysLabel", { defaultValue: "天" })}
                 </span>
               </div>
