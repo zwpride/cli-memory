@@ -119,7 +119,7 @@ export function UsageDashboard({
       className={cn("space-y-6 pb-8", embedded && "space-y-5 pb-4")}
     >
       {/* ── Toolbar: time range + refresh ── */}
-      <div className="sticky top-0 z-10 app-panel bg-white/84 px-4 py-3 shadow-sm dark:border-white/[0.08] dark:bg-slate-950/72">
+      <div className="sticky top-0 z-10 py-3">
         <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
