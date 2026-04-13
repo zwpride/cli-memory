@@ -313,10 +313,19 @@ export interface SessionMeta {
   resumeCommand?: string;
 }
 
+export interface ToolCallInfo {
+  id?: string;
+  name?: string;
+  arguments?: string;
+}
+
 export interface SessionMessage {
   role: string;
   content: string;
   ts?: number;
+  thinking?: string | null;
+  toolCalls?: ToolCallInfo[] | null;
+  toolCallId?: string | null;
 }
 
 // MCP 服务器连接参数（宽松：允许扩展字段）

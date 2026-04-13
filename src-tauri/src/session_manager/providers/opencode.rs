@@ -218,6 +218,9 @@ pub fn load_messages(path: &Path) -> Result<Vec<SessionMessage>, String> {
             role,
             content,
             ts: if ts > 0 { Some(ts) } else { None },
+            thinking: None,
+            tool_calls: None,
+            tool_call_id: None,
         })
         .collect();
 
@@ -307,6 +310,9 @@ pub fn load_messages_sqlite(source: &str) -> Result<Vec<SessionMessage>, String>
             role,
             content,
             ts: Some(ts),
+            thinking: None,
+            tool_calls: None,
+            tool_call_id: None,
         });
     }
 

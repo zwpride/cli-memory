@@ -30,9 +30,12 @@ pub fn scan_sessions() -> Vec<SessionMeta> {
 }
 
 pub fn load_messages(path: &Path) -> Result<Vec<SessionMessage>, String> {
+    use crate::session_manager::ToolCall;
+
     let file = File::open(path).map_err(|e| format!("Failed to open session file: {e}"))?;
     let reader = BufReader::new(file);
     let mut messages = Vec::new();
+    let mut system_prompt: Option<String> = None;
 
     for line in reader.lines() {
         let line = match line {
@@ -44,7 +47,13 @@ pub fn load_messages(path: &Path) -> Result<Vec<SessionMessage>, String> {
             Err(_) => continue,
         };
 
+        // Extract system prompt from meta messages
         if value.get("isMeta").and_then(Value::as_bool) == Some(true) {
+            if let Some(sp) = value.get("system").and_then(Value::as_str) {
+                if !sp.trim().is_empty() {
+                    system_prompt = Some(sp.to_string());
+                }
+            }
             continue;
         }
 
@@ -59,6 +68,37 @@ pub fn load_messages(path: &Path) -> Result<Vec<SessionMessage>, String> {
             .unwrap_or("unknown")
             .to_string();
 
+        let mut thinking: Option<String> = None;
+        let mut tool_calls: Option<Vec<ToolCall>> = None;
+        let mut tool_call_id: Option<String> = None;
+
+        // Extract tool_calls and thinking from assistant content blocks
+        if role == "assistant" {
+            if let Some(Value::Array(items)) = message.get("content") {
+                let mut tc_list = Vec::new();
+                for item in items {
+                    match item.get("type").and_then(Value::as_str) {
+                        Some("thinking") => {
+                            if let Some(t) = item.get("thinking").and_then(Value::as_str) {
+                                thinking = Some(t.to_string());
+                            }
+                        }
+                        Some("tool_use") => {
+                            tc_list.push(ToolCall {
+                                id: item.get("id").and_then(Value::as_str).map(String::from),
+                                name: item.get("name").and_then(Value::as_str).map(String::from),
+                                arguments: item.get("input").map(|v| v.to_string()),
+                            });
+                        }
+                        _ => {}
+                    }
+                }
+                if !tc_list.is_empty() {
+                    tool_calls = Some(tc_list);
+                }
+            }
+        }
+
         // Claude wraps tool_result inside user messages; reclassify as "tool" role
         if role == "user" {
             if let Some(Value::Array(items)) = message.get("content") {
@@ -68,18 +108,43 @@ pub fn load_messages(path: &Path) -> Result<Vec<SessionMessage>, String> {
                     });
                 if all_tool_results {
                     role = "tool".to_string();
+                    // Extract tool_use_id from first tool_result
+                    tool_call_id = items
+                        .first()
+                        .and_then(|item| item.get("tool_use_id"))
+                        .and_then(Value::as_str)
+                        .map(String::from);
                 }
             }
         }
 
         let content = message.get("content").map(extract_text).unwrap_or_default();
-        if content.trim().is_empty() {
+        if content.trim().is_empty() && tool_calls.is_none() {
             continue;
         }
 
         let ts = value.get("timestamp").and_then(parse_timestamp_to_ms);
 
-        messages.push(SessionMessage { role, content, ts });
+        messages.push(SessionMessage {
+            role,
+            content,
+            ts,
+            thinking,
+            tool_calls,
+            tool_call_id,
+        });
+    }
+
+    // Insert system prompt as first message if found
+    if let Some(sp) = system_prompt {
+        messages.insert(0, SessionMessage {
+            role: "system".to_string(),
+            content: sp,
+            ts: None,
+            thinking: None,
+            tool_calls: None,
+            tool_call_id: None,
+        });
     }
 
     Ok(messages)

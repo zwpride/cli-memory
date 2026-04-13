@@ -99,6 +99,9 @@ pub fn load_messages(path: &Path) -> Result<Vec<SessionMessage>, String> {
         result.push(SessionMessage {
             role: role.to_string(),
             content,
+            thinking: None,
+            tool_calls: None,
+            tool_call_id: None,
             ts,
         });
     }
