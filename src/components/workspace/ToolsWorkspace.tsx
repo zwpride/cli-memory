@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import {
   ArrowLeft,
+  Bot,
   Download,
   FolderArchive,
   History,
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import { AgentsPanel } from "@/components/agents/AgentsPanel";
 import UnifiedMcpPanel from "@/components/mcp/UnifiedMcpPanel";
 import PromptPanel from "@/components/prompts/PromptPanel";
 import { SkillsPage } from "@/components/skills/SkillsPage";
@@ -20,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import type { AppId } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
-export type ToolPanel = "prompts" | "skills" | "skillsDiscovery" | "mcp";
+export type ToolPanel = "prompts" | "skills" | "skillsDiscovery" | "mcp" | "agents";
 
 interface ToolsWorkspaceProps {
   activeApp: AppId;
@@ -29,7 +31,7 @@ interface ToolsWorkspaceProps {
 }
 
 const pageContainerClass =
-  "mx-auto flex w-full max-w-[1460px] flex-1 flex-col gap-5 px-4 pb-8 md:px-6 md:pb-10";
+  "mx-auto flex w-full flex-1 flex-col gap-5 px-4 pb-8 md:px-6 lg:px-10 md:pb-10";
 const segmentedButtonClass =
   "app-segmented-item h-10 px-4 text-sm font-medium";
 const sectionBadgeClass =
@@ -46,6 +48,8 @@ function toolPanelIcon(panel: ToolPanel) {
       return <History className="h-4 w-4" />;
     case "mcp":
       return <FolderArchive className="h-4 w-4" />;
+    case "agents":
+      return <Bot className="h-4 w-4" />;
   }
 }
 
@@ -63,6 +67,8 @@ function toolPanelLabel(
       return t("prompts.title", { appName: t(`apps.${activeApp}`) });
     case "mcp":
       return t("mcp.unifiedPanel.title");
+    case "agents":
+      return t("agents.title", { defaultValue: "Agents" });
   }
 }
 
@@ -171,6 +177,8 @@ export default function ToolsWorkspace({
             </Button>
           </div>
         );
+      case "agents":
+        return null;
     }
   };
 
@@ -197,6 +205,8 @@ export default function ToolsWorkspace({
         return <SkillsPage ref={skillsPageRef} initialApp={currentApp} />;
       case "mcp":
         return <UnifiedMcpPanel ref={mcpPanelRef} onOpenChange={() => undefined} />;
+      case "agents":
+        return <AgentsPanel appId={activeApp} />;
     }
   };
 
@@ -235,7 +245,7 @@ export default function ToolsWorkspace({
 
         <div className="border-b border-border-default/60 px-6 py-5 lg:px-8">
           <div className="app-segmented w-fit">
-            {(["skills", "prompts", "mcp"] as const).map((panel) => (
+            {(["agents", "skills", "prompts", "mcp"] as const).map((panel) => (
               <Button
                 key={panel}
                 type="button"

@@ -27,8 +27,9 @@ type UtilityPanel =
   | "prompts"
   | "skills"
   | "skillsDiscovery"
-  | "mcp";
-type ToolPanel = "prompts" | "skills" | "skillsDiscovery" | "mcp";
+  | "mcp"
+  | "agents";
+type ToolPanel = "prompts" | "skills" | "skillsDiscovery" | "mcp" | "agents";
 
 const VALID_PANELS: UtilityPanel[] = [
   "overview",
@@ -38,6 +39,7 @@ const VALID_PANELS: UtilityPanel[] = [
   "skills",
   "skillsDiscovery",
   "mcp",
+  "agents",
 ];
 
 const loadLoginPage = () =>
@@ -732,10 +734,6 @@ function App() {
     return (
       <div className={pageContainerClass}>
         <section className="app-shell relative overflow-hidden px-5 py-5 lg:px-6 lg:py-6">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-28 bg-gradient-to-r from-orange-500/10 via-transparent to-blue-500/10"
-          />
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0 max-w-3xl">
               <div className="flex flex-wrap items-center gap-2">
