@@ -66,12 +66,12 @@ export function UsageDashboard({
   const queryClient = useQueryClient();
   const [timeRange, setTimeRange] = useState<TimeRange>("1d");
   const [refreshIntervalMs, setRefreshIntervalMs] = useState(0);
-  const [customStartDate, setCustomStartDate] = useState(() => {
+  const [customStart, setCustomStart] = useState(() => {
     const d = new Date(); d.setDate(d.getDate() - 7);
-    return d.toISOString().slice(0, 10);
+    return d.toISOString().slice(0, 16);
   });
-  const [customEndDate, setCustomEndDate] = useState(() =>
-    new Date().toISOString().slice(0, 10),
+  const [customEnd, setCustomEnd] = useState(() =>
+    new Date().toISOString().slice(0, 16),
   );
 
   const refreshIntervalOptionsMs = [0, 5000, 10000, 30000, 60000] as const;
@@ -88,15 +88,15 @@ export function UsageDashboard({
 
   const days = useMemo(() => {
     if (timeRange === "custom") {
-      const start = new Date(customStartDate).getTime();
-      const end = new Date(customEndDate).getTime();
+      const start = new Date(customStart).getTime();
+      const end = new Date(customEnd).getTime();
       return Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
     }
     const map: Record<string, number> = {
       "1d": 1, "7d": 7, "30d": 30, "90d": 90, "180d": 180, "365d": 365,
     };
     return map[timeRange] ?? 30;
-  }, [timeRange, customStartDate, customEndDate]);
+  }, [timeRange, customStart, customEnd]);
   const deferredAppType = useDeferredValue(appType);
   const deferredDays = useDeferredValue(days);
   const isRefiningFilters =
@@ -120,13 +120,14 @@ export function UsageDashboard({
     >
       {/* ── Toolbar: time range + refresh ── */}
       <div className="sticky top-0 z-10 app-panel border-white/60 bg-white/84 p-4 shadow-[0_4px_24px_-8px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-white/[0.08] dark:bg-slate-950/72">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-3">
+          {/* Row 1: refresh + summary + time presets */}
+          <div className="flex flex-wrap items-center gap-3">
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              className="h-10 rounded-2xl border border-white/45 bg-white/56 px-3 text-xs text-muted-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] hover:bg-white/80 dark:border-white/[0.08] dark:bg-white/[0.04] dark:hover:bg-white/[0.09]"
+              className="h-9 rounded-2xl border border-white/45 bg-white/56 px-3 text-xs text-muted-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] hover:bg-white/80 dark:border-white/[0.08] dark:bg-white/[0.04] dark:hover:bg-white/[0.09]"
               title={t("common.refresh", "刷新")}
               onClick={changeRefreshInterval}
             >
@@ -137,14 +138,12 @@ export function UsageDashboard({
             </Button>
 
             {isRefiningFilters && (
-              <div className="rounded-full border border-white/50 bg-white/72 px-3 py-1 text-xs text-muted-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-white/[0.08] dark:bg-white/[0.05]">
+              <div className="rounded-full border border-white/50 bg-white/72 px-3 py-1 text-xs text-muted-foreground dark:border-white/[0.08] dark:bg-white/[0.05]">
                 {t("common.loading", { defaultValue: "读取中" })}
               </div>
             )}
-          </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground ml-auto">
               <span>
                 {(summaryData?.totalRequests ?? 0).toLocaleString()}{" "}
                 {t("usage.requestsLabel")}
@@ -162,69 +161,69 @@ export function UsageDashboard({
                 startTransition(() => setTimeRange(value as TimeRange))
               }
             >
-              <TabsList className="app-segmented flex h-10 flex-wrap">
-                <TabsTrigger value="1d" className="app-tabs-trigger px-4">
+              <TabsList className="app-segmented flex h-9 flex-wrap">
+                <TabsTrigger value="1d" className="app-tabs-trigger px-3 text-xs">
                   {t("usage.today", { defaultValue: "今天" })}
                 </TabsTrigger>
-                <TabsTrigger value="7d" className="app-tabs-trigger px-4">
+                <TabsTrigger value="7d" className="app-tabs-trigger px-3 text-xs">
                   {t("usage.last7days", { defaultValue: "7天" })}
                 </TabsTrigger>
-                <TabsTrigger value="30d" className="app-tabs-trigger px-4">
+                <TabsTrigger value="30d" className="app-tabs-trigger px-3 text-xs">
                   {t("usage.last30days", { defaultValue: "30天" })}
                 </TabsTrigger>
-                <TabsTrigger value="90d" className="app-tabs-trigger px-4">
+                <TabsTrigger value="90d" className="app-tabs-trigger px-3 text-xs">
                   {t("usage.last90days", { defaultValue: "90天" })}
                 </TabsTrigger>
-                <TabsTrigger value="180d" className="app-tabs-trigger px-4">
+                <TabsTrigger value="180d" className="app-tabs-trigger px-3 text-xs">
                   {t("usage.last180days", { defaultValue: "半年" })}
                 </TabsTrigger>
-                <TabsTrigger value="365d" className="app-tabs-trigger px-4">
+                <TabsTrigger value="365d" className="app-tabs-trigger px-3 text-xs">
                   {t("usage.last365days", { defaultValue: "一年" })}
                 </TabsTrigger>
-                <TabsTrigger value="custom" className="app-tabs-trigger px-4">
+                <TabsTrigger value="custom" className="app-tabs-trigger px-3 text-xs">
                   <Calendar className="mr-1 h-3 w-3" />
                   {t("usage.custom", { defaultValue: "自定义" })}
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-            {timeRange === "custom" && (
-              <div className="flex items-center gap-2">
-                <input
-                  type="date"
-                  className="h-8 rounded-lg border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
-                  value={customStartDate}
-                  onChange={(e) => setCustomStartDate(e.target.value)}
-                />
-                <span className="text-xs text-muted-foreground">→</span>
-                <input
-                  type="date"
-                  className="h-8 rounded-lg border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
-                  value={customEndDate}
-                  onChange={(e) => setCustomEndDate(e.target.value)}
-                />
-              </div>
-            )}
           </div>
+
+          {/* Row 2: custom date-time range (always visible when custom selected) */}
+          {timeRange === "custom" && (
+            <div className="flex items-center gap-2">
+              <input
+                type="datetime-local"
+                className="h-8 rounded-lg border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
+                value={customStart}
+                onChange={(e) => setCustomStart(e.target.value)}
+              />
+              <span className="text-xs text-muted-foreground">→</span>
+              <input
+                type="datetime-local"
+                className="h-8 rounded-lg border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
+                value={customEnd}
+                onChange={(e) => setCustomEnd(e.target.value)}
+              />
+              <span className="text-[11px] text-muted-foreground">
+                ({days} {t("usage.daysLabel", { defaultValue: "天" })})
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* ── Unified 4-tab view, all sharing the same time range ── */}
+      {/* ── 2-tab layout: 总览 / 请求日志 ── */}
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="app-segmented flex h-10 w-fit">
-          <TabsTrigger value="overview" className="app-tabs-trigger px-4">
+          <TabsTrigger value="overview" className="app-tabs-trigger px-5">
             {t("usage.overview", { defaultValue: "总览" })}
           </TabsTrigger>
-          <TabsTrigger value="trends" className="app-tabs-trigger px-4">
-            {t("usage.trends", { defaultValue: "趋势" })}
-          </TabsTrigger>
-          <TabsTrigger value="logs" className="app-tabs-trigger px-4">
+          <TabsTrigger value="logs" className="app-tabs-trigger px-5">
             {t("usage.requestLogs", { defaultValue: "请求日志" })}
-          </TabsTrigger>
-          <TabsTrigger value="stats" className="app-tabs-trigger px-4">
-            {t("usage.stats", { defaultValue: "统计" })}
           </TabsTrigger>
         </TabsList>
 
+        {/* 总览 = 数据源 + 概览卡片 + 趋势图 + 供应商/模型统计 */}
         <TabsContent value="overview" className="mt-4 space-y-6">
           <Suspense fallback={barFallback}>
             <DataSourceBar refreshIntervalMs={refreshIntervalMs} />
@@ -236,9 +235,6 @@ export function UsageDashboard({
               refreshIntervalMs={refreshIntervalMs}
             />
           </Suspense>
-        </TabsContent>
-
-        <TabsContent value="trends" className="mt-4">
           <Suspense fallback={chartFallback}>
             <UsageTrendChart
               days={deferredDays}
@@ -246,18 +242,6 @@ export function UsageDashboard({
               refreshIntervalMs={refreshIntervalMs}
             />
           </Suspense>
-        </TabsContent>
-
-        <TabsContent value="logs" className="mt-4">
-          <Suspense fallback={tableFallback}>
-            <RequestLogTable
-              appType={deferredAppType}
-              refreshIntervalMs={refreshIntervalMs}
-            />
-          </Suspense>
-        </TabsContent>
-
-        <TabsContent value="stats" className="mt-4">
           <div className="grid gap-6 xl:grid-cols-2">
             <div className="space-y-2">
               <h3 className="px-1 text-sm font-semibold text-foreground">
@@ -282,6 +266,16 @@ export function UsageDashboard({
               </Suspense>
             </div>
           </div>
+        </TabsContent>
+
+        {/* 请求日志 */}
+        <TabsContent value="logs" className="mt-4">
+          <Suspense fallback={tableFallback}>
+            <RequestLogTable
+              appType={deferredAppType}
+              refreshIntervalMs={refreshIntervalMs}
+            />
+          </Suspense>
         </TabsContent>
       </Tabs>
     </motion.div>
