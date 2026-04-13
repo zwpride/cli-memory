@@ -154,7 +154,7 @@ export function UsageDashboard({
                 startTransition(() => setTimeRange(value as TimeRange))
               }
             >
-              <TabsList className="app-segmented flex h-8">
+              <TabsList className="app-segmented flex">
                 <TabsTrigger value="1d" className="app-tabs-trigger px-2.5 text-xs">
                   {t("usage.today", { defaultValue: "今天" })}
                 </TabsTrigger>
