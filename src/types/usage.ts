@@ -121,7 +121,7 @@ export interface ProviderLimitStatus {
   monthlyExceeded: boolean;
 }
 
-export type TimeRange = "1d" | "7d" | "30d" | "90d" | "180d" | "365d";
+export type TimeRange = "1d" | "7d" | "30d" | "90d" | "180d" | "365d" | "custom";
 
 export type AppTypeFilter = "all" | "claude" | "codex" | "gemini";
 

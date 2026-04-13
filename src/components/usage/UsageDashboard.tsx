@@ -3,6 +3,7 @@ import {
   startTransition,
   Suspense,
   useDeferredValue,
+  useMemo,
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
@@ -10,6 +11,7 @@ import type { TimeRange } from "@/types/usage";
 import { useUsageSummary } from "@/lib/query/usage";
 import { motion } from "framer-motion";
 import {
+  Calendar,
   RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -64,6 +66,13 @@ export function UsageDashboard({
   const queryClient = useQueryClient();
   const [timeRange, setTimeRange] = useState<TimeRange>("1d");
   const [refreshIntervalMs, setRefreshIntervalMs] = useState(0);
+  const [customStartDate, setCustomStartDate] = useState(() => {
+    const d = new Date(); d.setDate(d.getDate() - 7);
+    return d.toISOString().slice(0, 10);
+  });
+  const [customEndDate, setCustomEndDate] = useState(() =>
+    new Date().toISOString().slice(0, 10),
+  );
 
   const refreshIntervalOptionsMs = [0, 5000, 10000, 30000, 60000] as const;
   const changeRefreshInterval = () => {
@@ -77,10 +86,17 @@ export function UsageDashboard({
     queryClient.invalidateQueries({ queryKey: usageKeys.all });
   };
 
-  const timeRangeDaysMap: Record<TimeRange, number> = {
-    "1d": 1, "7d": 7, "30d": 30, "90d": 90, "180d": 180, "365d": 365,
-  };
-  const days = timeRangeDaysMap[timeRange];
+  const days = useMemo(() => {
+    if (timeRange === "custom") {
+      const start = new Date(customStartDate).getTime();
+      const end = new Date(customEndDate).getTime();
+      return Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+    }
+    const map: Record<string, number> = {
+      "1d": 1, "7d": 7, "30d": 30, "90d": 90, "180d": 180, "365d": 365,
+    };
+    return map[timeRange] ?? 30;
+  }, [timeRange, customStartDate, customEndDate]);
   const deferredAppType = useDeferredValue(appType);
   const deferredDays = useDeferredValue(days);
   const isRefiningFilters =
@@ -165,8 +181,29 @@ export function UsageDashboard({
                 <TabsTrigger value="365d" className="app-tabs-trigger px-4">
                   {t("usage.last365days", { defaultValue: "一年" })}
                 </TabsTrigger>
+                <TabsTrigger value="custom" className="app-tabs-trigger px-4">
+                  <Calendar className="mr-1 h-3 w-3" />
+                  {t("usage.custom", { defaultValue: "自定义" })}
+                </TabsTrigger>
               </TabsList>
             </Tabs>
+            {timeRange === "custom" && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  className="h-8 rounded-lg border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                />
+                <span className="text-xs text-muted-foreground">→</span>
+                <input
+                  type="date"
+                  className="h-8 rounded-lg border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
