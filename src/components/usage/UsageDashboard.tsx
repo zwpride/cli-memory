@@ -180,26 +180,24 @@ export function UsageDashboard({
               </TabsList>
             </Tabs>
 
-            {timeRange === "custom" && (<>
-              <input
-                type="datetime-local"
-                className="box-border rounded-md border border-border bg-background px-1.5 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
-                style={{ height: 32, lineHeight: 1 }}
-                value={customStart}
-                onChange={(e) => setCustomStart(e.target.value)}
-              />
-              <span className="text-xs text-muted-foreground">→</span>
-              <input
-                type="datetime-local"
-                className="box-border rounded-md border border-border bg-background px-1.5 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
-                style={{ height: 32, lineHeight: 1 }}
-                value={customEnd}
-                onChange={(e) => setCustomEnd(e.target.value)}
-              />
-              <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                {days}{t("usage.daysLabel", { defaultValue: "天" })}
-              </span>
-            </>)}
+            <input
+              type="datetime-local"
+              className="box-border rounded-md border border-border bg-background px-1.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-primary/50"
+              style={{ height: 32, lineHeight: "32px" }}
+              value={customStart}
+              onChange={(e) => setCustomStart(e.target.value)}
+            />
+            <span className="text-xs text-muted-foreground">→</span>
+            <input
+              type="datetime-local"
+              className="box-border rounded-md border border-border bg-background px-1.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-primary/50"
+              style={{ height: 32, lineHeight: "32px" }}
+              value={customEnd}
+              onChange={(e) => setCustomEnd(e.target.value)}
+            />
+            <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+              {days}{t("usage.daysLabel", { defaultValue: "天" })}
+            </span>
           </div>
         </div>
       </div>
