@@ -119,7 +119,7 @@ export function UsageDashboard({
       className={cn("space-y-6 pb-8", embedded && "space-y-5 pb-4")}
     >
       {/* ── Toolbar: time range + refresh ── */}
-      <div className="sticky top-0 z-10 py-3">
+      <div className="sticky top-0 z-10 app-panel bg-white/84 px-4 py-3 shadow-sm dark:border-white/[0.08] dark:bg-slate-950/72">
         <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
@@ -180,28 +180,26 @@ export function UsageDashboard({
               </TabsList>
             </Tabs>
 
-            {timeRange === "custom" && (
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="datetime-local"
-                  className="box-border rounded-md border border-border bg-background px-1.5 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
-                  style={{ height: 32, lineHeight: 1 }}
-                  value={customStart}
-                  onChange={(e) => setCustomStart(e.target.value)}
-                />
-                <span className="text-xs text-muted-foreground">→</span>
-                <input
-                  type="datetime-local"
-                  className="box-border rounded-md border border-border bg-background px-1.5 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
-                  style={{ height: 32, lineHeight: 1 }}
-                  value={customEnd}
-                  onChange={(e) => setCustomEnd(e.target.value)}
-                />
-                <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                  {days}{t("usage.daysLabel", { defaultValue: "天" })}
-                </span>
-              </div>
-            )}
+            {timeRange === "custom" && (<>
+              <input
+                type="datetime-local"
+                className="box-border rounded-md border border-border bg-background px-1.5 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
+                style={{ height: 32, lineHeight: 1 }}
+                value={customStart}
+                onChange={(e) => setCustomStart(e.target.value)}
+              />
+              <span className="text-xs text-muted-foreground">→</span>
+              <input
+                type="datetime-local"
+                className="box-border rounded-md border border-border bg-background px-1.5 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
+                style={{ height: 32, lineHeight: 1 }}
+                value={customEnd}
+                onChange={(e) => setCustomEnd(e.target.value)}
+              />
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                {days}{t("usage.daysLabel", { defaultValue: "天" })}
+              </span>
+            </>)}
           </div>
         </div>
       </div>
