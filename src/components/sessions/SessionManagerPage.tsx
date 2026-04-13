@@ -506,10 +506,9 @@ export function SessionManagerPage({ appId }: { appId: string }) {
   return (
     <TooltipProvider>
       <div
-        className="mx-auto flex flex-col min-h-0"
+        className="flex flex-col min-h-0 gap-4"
         onWheel={(e) => e.stopPropagation()}
       >
-        <div className="flex-1 overflow-hidden flex flex-col gap-4">
           <div className="sticky top-0 z-20">
             <div className="app-panel border-white/60 bg-white/82 px-4 py-4 shadow-[0_4px_24px_-8px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-white/[0.08] dark:bg-slate-950/72">
               <div className="space-y-3">
@@ -1012,7 +1011,6 @@ export function SessionManagerPage({ appId }: { appId: string }) {
               )}
             </DialogContent>
           </Dialog>
-        </div>
       </div>
       <ConfirmDialog
         isOpen={Boolean(deleteTargets)}
