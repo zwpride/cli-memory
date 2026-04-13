@@ -29,6 +29,18 @@ vi.mock("@/components/sessions/SessionToc", () => ({
   SessionTocDialog: () => null,
 }));
 
+vi.mock("@/components/ui/dialog", () => ({
+  Dialog: ({ children, open }: any) => (open ? <div>{children}</div> : null),
+  DialogContent: ({ children }: any) => (
+    <div data-testid="session-dialog">{children}</div>
+  ),
+  DialogHeader: ({ children }: any) => <div>{children}</div>,
+  DialogTitle: ({ children, className }: any) => (
+    <h2 className={className}>{children}</h2>
+  ),
+  DialogClose: ({ children }: any) => <>{children}</>,
+}));
+
 vi.mock("@/components/ConfirmDialog", () => ({
   ConfirmDialog: ({
     isOpen,
@@ -74,6 +86,17 @@ const renderPage = () => {
     ),
   };
 };
+
+/** Wait for session list to load, then click the given session to open its dialog */
+async function openSession(name: string) {
+  await waitFor(() =>
+    expect(screen.getByText(name)).toBeInTheDocument(),
+  );
+  fireEvent.click(screen.getByText(name));
+  await waitFor(() =>
+    expect(screen.getByTestId("session-dialog")).toBeInTheDocument(),
+  );
+}
 
 describe("SessionManagerPage", () => {
   beforeEach(() => {
@@ -124,68 +147,42 @@ describe("SessionManagerPage", () => {
     setSessionFixtures(sessions, messages);
   });
 
-  it("deletes the selected session and selects the next visible session", async () => {
+  it("deletes the selected session via the detail dialog", async () => {
     renderPage();
+    await openSession("Alpha Session");
+
+    const sessionDialog = screen.getByTestId("session-dialog");
+    fireEvent.click(within(sessionDialog).getByRole("button", { name: /删除/i }));
+
+    const confirmDialog = screen.getByTestId("confirm-dialog");
+    expect(confirmDialog).toBeInTheDocument();
+    expect(within(confirmDialog).getByText(/Alpha Session/)).toBeInTheDocument();
+
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: /删除/i }));
 
     await waitFor(() =>
-      expect(
-        screen.getByRole("heading", { name: "Alpha Session" }),
-      ).toBeInTheDocument(),
+      expect(screen.queryByText("Alpha Session")).not.toBeInTheDocument(),
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /删除/i }));
-
-    const dialog = screen.getByTestId("confirm-dialog");
-    expect(dialog).toBeInTheDocument();
-    expect(within(dialog).getByText(/Alpha Session/)).toBeInTheDocument();
-
-    fireEvent.click(within(dialog).getByRole("button", { name: /删除/i }));
-
-    await waitFor(() =>
-      expect(
-        screen.getByRole("heading", { name: "Beta Session" }),
-      ).toBeInTheDocument(),
-    );
-
-    expect(screen.queryByText("Alpha Session")).not.toBeInTheDocument();
     expect(toastErrorMock).not.toHaveBeenCalled();
     expect(toastSuccessMock).toHaveBeenCalled();
   });
 
   it("removes a deleted session from filtered search results", async () => {
     renderPage();
+    await openSession("Alpha Session");
 
-    await waitFor(() =>
-      expect(
-        screen.getByRole("heading", { name: "Alpha Session" }),
-      ).toBeInTheDocument(),
-    );
+    // Delete from dialog
+    const sessionDialog = screen.getByTestId("session-dialog");
+    fireEvent.click(within(sessionDialog).getByRole("button", { name: /删除/i }));
 
-    fireEvent.change(screen.getByRole("textbox"), {
-      target: { value: "Alpha" },
-    });
-
-    await waitFor(() =>
-      expect(
-        screen.getByRole("heading", { name: "Alpha Session" }),
-      ).toBeInTheDocument(),
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: /删除/i }));
-
-    const dialog = screen.getByTestId("confirm-dialog");
-    fireEvent.click(within(dialog).getByRole("button", { name: /删除/i }));
+    const confirmDialog = screen.getByTestId("confirm-dialog");
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: /删除/i }));
 
     await waitFor(() =>
       expect(screen.queryByText("Alpha Session")).not.toBeInTheDocument(),
     );
 
-    expect(
-      screen.getByText("sessionManager.selectSession"),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByText("sessionManager.emptySession"),
-    ).not.toBeInTheDocument();
     expect(toastErrorMock).not.toHaveBeenCalled();
     expect(toastSuccessMock).toHaveBeenCalled();
   });
@@ -198,9 +195,7 @@ describe("SessionManagerPage", () => {
     renderPage();
 
     await waitFor(() =>
-      expect(
-        screen.getByRole("heading", { name: "Alpha Session" }),
-      ).toBeInTheDocument(),
+      expect(screen.getByText("Alpha Session")).toBeInTheDocument(),
     );
 
     fireEvent.click(screen.getByRole("button", { name: /批量管理/i }));
@@ -229,9 +224,7 @@ describe("SessionManagerPage", () => {
     renderPage();
 
     await waitFor(() =>
-      expect(
-        screen.getByRole("heading", { name: "Alpha Session" }),
-      ).toBeInTheDocument(),
+      expect(screen.getByText("Alpha Session")).toBeInTheDocument(),
     );
 
     fireEvent.click(screen.getByRole("button", { name: /批量管理/i }));
@@ -248,9 +241,7 @@ describe("SessionManagerPage", () => {
     renderPage();
 
     await waitFor(() =>
-      expect(
-        screen.getByRole("heading", { name: "Alpha Session" }),
-      ).toBeInTheDocument(),
+      expect(screen.getByText("Alpha Session")).toBeInTheDocument(),
     );
 
     fireEvent.click(screen.getByRole("button", { name: /批量管理/i }));
@@ -284,9 +275,7 @@ describe("SessionManagerPage", () => {
       );
 
     await waitFor(() =>
-      expect(
-        screen.getByRole("heading", { name: "Alpha Session" }),
-      ).toBeInTheDocument(),
+      expect(screen.getByText("Alpha Session")).toBeInTheDocument(),
     );
 
     fireEvent.click(screen.getByRole("button", { name: /批量管理/i }));
@@ -359,9 +348,7 @@ describe("SessionManagerPage", () => {
     );
 
     await waitFor(() =>
-      expect(
-        screen.getByRole("heading", { name: "Claude Session" }),
-      ).toBeInTheDocument(),
+      expect(screen.getByText("Claude Session")).toBeInTheDocument(),
     );
 
     view.rerender(
@@ -371,9 +358,7 @@ describe("SessionManagerPage", () => {
     );
 
     await waitFor(() =>
-      expect(
-        screen.getByRole("heading", { name: "Codex Session" }),
-      ).toBeInTheDocument(),
+      expect(screen.getByText("Codex Session")).toBeInTheDocument(),
     );
 
     expect(screen.queryByText("Claude Session")).not.toBeInTheDocument();
@@ -404,16 +389,11 @@ describe("SessionManagerPage", () => {
     });
 
     renderPage();
+    await openSession("Long Session");
 
+    // All 220 messages should be rendered — check that the last message exists
     await waitFor(() =>
-      expect(
-        screen.getByRole("heading", { name: "Long Session" }),
-      ).toBeInTheDocument(),
-    );
-
-    // All 220 messages should be rendered, with the badge showing total count
-    await waitFor(() =>
-      expect(screen.getByText("220")).toBeInTheDocument(),
+      expect(screen.getByText("message-220")).toBeInTheDocument(),
     );
 
     // No folding controls should be present

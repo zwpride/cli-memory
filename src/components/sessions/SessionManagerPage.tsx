@@ -21,6 +21,7 @@ import {
   FolderOpen,
   X,
   CheckSquare,
+  List,
 } from "lucide-react";
 import {
   useDeleteSessionMutation,
@@ -36,6 +37,13 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -46,7 +54,7 @@ import { cn } from "@/lib/utils";
 import { ProviderIcon } from "@/components/ProviderIcon";
 import { SessionItem } from "./SessionItem";
 import { SessionMessageItem } from "./SessionMessageItem";
-import { SessionTocDialog, SessionTocSidebar } from "./SessionToc";
+import { SessionTocDialog } from "./SessionToc";
 import {
   formatSessionTitle,
   formatTimestamp,
@@ -213,17 +221,12 @@ export function SessionManagerPage({ appId }: { appId: string }) {
   const hasExplicitSessionFilter = search.trim().length > 0;
 
   useEffect(() => {
-    if (filteredSessions.length === 0) {
-      setSelectedKey(null);
-      return;
-    }
-    const exists = selectedKey
-      ? filteredSessions.some(
-          (session) => getSessionKey(session) === selectedKey,
-        )
-      : false;
+    if (!selectedKey) return;
+    const exists = filteredSessions.some(
+      (session) => getSessionKey(session) === selectedKey,
+    );
     if (!exists) {
-      setSelectedKey(getSessionKey(filteredSessions[0]));
+      setSelectedKey(null);
     }
   }, [filteredSessions, selectedKey]);
 
@@ -677,134 +680,136 @@ export function SessionManagerPage({ appId }: { appId: string }) {
             </div>
           </div>
 
-          <div className="flex-1 grid gap-4 xl:grid-cols-[480px_minmax(0,1fr)]">
-            {/* 左侧会话列表 */}
-            <Card className="flex flex-col overflow-hidden xl:sticky xl:top-20 xl:self-start xl:max-h-[calc(100vh-120px)] min-h-[300px]">
-              <CardHeader className="border-b px-4 py-4">
-                <div className="flex items-center justify-between gap-3">
-                  <CardTitle className="text-sm font-medium whitespace-nowrap">
-                    {t("sessionManager.sessionList")}
-                  </CardTitle>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>
-                      {t("sessionManager.visibleSessions", {
-                        defaultValue: "当前显示 {{count}} 项",
-                        count: filteredSessions.length,
-                      })}
-                    </span>
-                    {sessions.length > filteredSessions.length && (
-                      <>
-                        <span className="text-border">|</span>
-                        <span>
-                          {t("sessionManager.totalSessions", {
-                            defaultValue: "总计 {{count}} 项",
-                            count: sessions.length,
-                          })}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="flex-1 min-h-0 p-0">
-                <ScrollArea className="h-full">
-                  <div className="p-2">
-                    {isLoading ? (
-                      <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
-                        <RefreshCw className="size-5 animate-spin text-muted-foreground" />
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium text-foreground">
-                            {t("sessionManager.loadingTitle", {
-                              defaultValue: "正在加载会话",
-                            })}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {t("sessionManager.loadingDescription", {
-                              defaultValue:
-                                "正在读取本地会话索引和历史记录，请稍候。",
-                            })}
-                          </p>
-                        </div>
-                      </div>
-                    ) : filteredSessions.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <MessageSquare className="size-8 text-muted-foreground/50 mb-2" />
-                        <p className="text-sm font-medium text-foreground">
-                          {sessions.length === 0
-                            ? t("sessionManager.noSessions", {
-                                defaultValue: "暂无会话",
-                              })
-                            : t("sessionManager.noFilteredSessions", {
-                                defaultValue: "当前筛选下没有匹配的会话",
-                              })}
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {sessions.length === 0
-                            ? t("sessionManager.noSessionsDescription", {
-                                defaultValue:
-                                  "当前应用下还没有可读取的本地会话记录。",
-                              })
-                            : hasExplicitSessionFilter
-                              ? t("sessionManager.noFilteredSessionsDescription", {
-                                  defaultValue:
-                                    "试试清空搜索词或切回全部来源，再查看其它会话。",
-                                })
-                              : t("sessionManager.noSessionsInCurrentApp", {
-                                  defaultValue:
-                                    "当前应用下没有会话，但其它应用可能已有历史记录。",
-                                })}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-1">
-                        {filteredSessions.map((session) => {
-                          const isSelected =
-                            selectedKey !== null &&
-                            getSessionKey(session) === selectedKey;
-
-                          return (
-                            <SessionItem
-                              key={getSessionKey(session)}
-                              session={session}
-                              isSelected={isSelected}
-                              selectionMode={selectionMode}
-                              searchQuery={search}
-                              isChecked={selectedSessionKeys.has(
-                                getSessionKey(session),
-                              )}
-                              isCheckDisabled={!session.sourcePath}
-                              onSelect={setSelectedKey}
-                              onToggleChecked={(checked) =>
-                                toggleSessionChecked(session, checked)
-                              }
-                            />
-                          );
+          {/* 会话列表 - 全宽 */}
+          <Card className="flex flex-col overflow-hidden min-h-[300px] max-h-[calc(100vh-220px)]">
+            <CardHeader className="border-b px-4 py-4">
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle className="text-sm font-medium whitespace-nowrap">
+                  {t("sessionManager.sessionList")}
+                </CardTitle>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>
+                    {t("sessionManager.visibleSessions", {
+                      defaultValue: "当前显示 {{count}} 项",
+                      count: filteredSessions.length,
+                    })}
+                  </span>
+                  {sessions.length > filteredSessions.length && (
+                    <>
+                      <span className="text-border">|</span>
+                      <span>
+                        {t("sessionManager.totalSessions", {
+                          defaultValue: "总计 {{count}} 项",
+                          count: sessions.length,
                         })}
-                      </div>
-                    )}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-
-            {/* 右侧会话详情 */}
-            <Card
-              className="flex flex-col overflow-hidden min-h-0"
-              ref={detailRef}
-            >
-              {!selectedSession ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-8">
-                  <MessageSquare className="size-12 mb-3 opacity-30" />
-                  <p className="text-sm">{t("sessionManager.selectSession")}</p>
+                      </span>
+                    </>
+                  )}
                 </div>
-              ) : (
+              </div>
+            </CardHeader>
+            <CardContent className="flex-1 min-h-0 p-0">
+              <ScrollArea className="h-full">
+                <div className="p-2">
+                  {isLoading ? (
+                    <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+                      <RefreshCw className="size-5 animate-spin text-muted-foreground" />
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-foreground">
+                          {t("sessionManager.loadingTitle", {
+                            defaultValue: "正在加载会话",
+                          })}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {t("sessionManager.loadingDescription", {
+                            defaultValue:
+                              "正在读取本地会话索引和历史记录，请稍候。",
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  ) : filteredSessions.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <MessageSquare className="size-8 text-muted-foreground/50 mb-2" />
+                      <p className="text-sm font-medium text-foreground">
+                        {sessions.length === 0
+                          ? t("sessionManager.noSessions", {
+                              defaultValue: "暂无会话",
+                            })
+                          : t("sessionManager.noFilteredSessions", {
+                              defaultValue: "当前筛选下没有匹配的会话",
+                            })}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {sessions.length === 0
+                          ? t("sessionManager.noSessionsDescription", {
+                              defaultValue:
+                                "当前应用下还没有可读取的本地会话记录。",
+                            })
+                          : hasExplicitSessionFilter
+                            ? t("sessionManager.noFilteredSessionsDescription", {
+                                defaultValue:
+                                  "试试清空搜索词或切回全部来源，再查看其它会话。",
+                              })
+                            : t("sessionManager.noSessionsInCurrentApp", {
+                                defaultValue:
+                                  "当前应用下没有会话，但其它应用可能已有历史记录。",
+                              })}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      {filteredSessions.map((session) => {
+                        const isSelected =
+                          selectedKey !== null &&
+                          getSessionKey(session) === selectedKey;
+
+                        return (
+                          <SessionItem
+                            key={getSessionKey(session)}
+                            session={session}
+                            isSelected={isSelected}
+                            selectionMode={selectionMode}
+                            searchQuery={search}
+                            isChecked={selectedSessionKeys.has(
+                              getSessionKey(session),
+                            )}
+                            isCheckDisabled={!session.sourcePath}
+                            onSelect={setSelectedKey}
+                            onToggleChecked={(checked) =>
+                              toggleSessionChecked(session, checked)
+                            }
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+
+          {/* 会话详情弹窗 */}
+          <Dialog
+            open={!!selectedSession}
+            onOpenChange={(open) => {
+              if (!open) setSelectedKey(null);
+            }}
+          >
+            <DialogContent
+              className="max-w-6xl w-[95vw] h-[90vh] p-0 gap-0 flex flex-col"
+              zIndex="nested"
+              onInteractOutside={(e) => {
+                e.preventDefault();
+              }}
+            >
+              {selectedSession && (
                 <>
-                  {/* 详情头部 */}
-                  <CardHeader className="py-3 px-4 border-b shrink-0">
+                  {/* 弹窗头部 */}
+                  <DialogHeader className="px-5 py-3 border-b shrink-0">
                     <div className="flex items-start justify-between gap-4">
-                      {/* 左侧：会话信息 */}
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-1">
+                        <DialogTitle className="flex items-center gap-2 text-base">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <span className="shrink-0">
@@ -821,13 +826,12 @@ export function SessionManagerPage({ appId }: { appId: string }) {
                               {getProviderLabel(selectedSession.providerId, t)}
                             </TooltipContent>
                           </Tooltip>
-                          <h2 className="text-base font-semibold break-words">
+                          <span className="break-words">
                             {formatSessionTitle(selectedSession)}
-                          </h2>
-                        </div>
+                          </span>
+                        </DialogTitle>
 
-                        {/* 元信息 */}
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground mt-1">
                           <div className="flex items-center gap-1">
                             <Clock className="size-3" />
                             <span>
@@ -869,10 +873,40 @@ export function SessionManagerPage({ appId }: { appId: string }) {
                               </TooltipContent>
                             </Tooltip>
                           )}
+                          <Badge variant="secondary" className="text-xs">
+                            {messages.length} {t("sessionManager.messagesCount", { defaultValue: "条消息" })}
+                          </Badge>
                         </div>
+
+                        {/* 恢复命令 */}
+                        {selectedSession.resumeCommand && (
+                          <div className="mt-2 flex items-center gap-2">
+                            <div className="flex-1 rounded-md bg-muted/60 px-3 py-1.5 font-mono text-xs text-muted-foreground truncate">
+                              {selectedSession.resumeCommand}
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 gap-1.5 shrink-0"
+                              onClick={() =>
+                                void handleCopy(
+                                  selectedSession.resumeCommand!,
+                                  t("sessionManager.resumeCommandCopied", {
+                                    defaultValue: "已复制恢复命令",
+                                  }),
+                                )
+                              }
+                            >
+                              <Copy className="size-3" />
+                              {t("sessionManager.copyCommand", {
+                                defaultValue: "复制",
+                              })}
+                            </Button>
+                          </div>
+                        )}
                       </div>
 
-                      {/* 右侧：操作按钮组 */}
+                      {/* 操作按钮 */}
                       <div className="flex items-center gap-2 shrink-0">
                         <Button
                           size="sm"
@@ -917,121 +951,104 @@ export function SessionManagerPage({ appId }: { appId: string }) {
                                 })}
                           </span>
                         </Button>
+                        <DialogClose asChild>
+                          <Button variant="ghost" size="sm" className="gap-1.5">
+                            <X className="size-3.5" />
+                          </Button>
+                        </DialogClose>
                       </div>
                     </div>
+                  </DialogHeader>
 
-                    {/* 恢复命令 - 直接复制即可 */}
-                    {selectedSession.resumeCommand && (
-                      <div className="mt-3">
-                        <div className="mb-1.5 text-xs text-muted-foreground">
-                          {t("sessionManager.resumeHint", {
-                            defaultValue: "直接复制下面的命令即可恢复会话",
-                          })}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 rounded-md bg-muted/60 px-3 py-1.5 font-mono text-xs text-muted-foreground truncate">
-                            {selectedSession.resumeCommand}
+                  {/* 消息列表 + 对话目录 */}
+                  <div className="flex flex-1 min-h-0" ref={detailRef}>
+                    {/* 消息区 - 可滚动 */}
+                    <ScrollArea className="flex-1 min-w-0">
+                      <div className="p-5 min-w-0">
+                        {isLoadingMessages ? (
+                          <div className="flex items-center justify-center py-12">
+                            <RefreshCw className="size-5 animate-spin text-muted-foreground" />
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 gap-1.5 shrink-0"
-                            onClick={() =>
-                              void handleCopy(
-                                selectedSession.resumeCommand!,
-                                t("sessionManager.resumeCommandCopied", {
-                                  defaultValue: "已复制恢复命令",
-                                }),
-                              )
-                            }
-                          >
-                            <Copy className="size-3" />
-                            {t("sessionManager.copyCommand", {
-                              defaultValue: "复制",
-                            })}
-                          </Button>
+                        ) : messages.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center py-12 text-center">
+                            <MessageSquare className="size-8 text-muted-foreground/50 mb-2" />
+                            <p className="text-sm text-muted-foreground">
+                              {t("sessionManager.emptySession")}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {messages.map((message, index) => (
+                              <SessionMessageItem
+                                key={`${message.role}-${index}`}
+                                message={message}
+                                index={index}
+                                isActive={activeMessageIndex === index}
+                                searchQuery={deferredSearch}
+                                setRef={(el) => {
+                                  if (el) messageRefs.current.set(index, el);
+                                }}
+                                onCopy={(content) =>
+                                  handleCopy(
+                                    content,
+                                    t("sessionManager.messageCopied", {
+                                      defaultValue: "已复制消息内容",
+                                    }),
+                                  )
+                                }
+                              />
+                            ))}
+                            <div ref={messagesEndRef} />
+                          </div>
+                        )}
+                      </div>
+                    </ScrollArea>
+
+                    {/* 对话目录 - 固定在右侧，永远可见 */}
+                    {userMessagesToc.length > 2 && (
+                      <div className="w-56 border-l shrink-0 hidden lg:flex flex-col">
+                        <div className="p-3 border-b shrink-0">
+                          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                            <List className="size-3.5" />
+                            <span>{t("sessionManager.tocTitle")}</span>
+                          </div>
                         </div>
+                        <ScrollArea className="flex-1 min-h-0">
+                          <div className="p-2 space-y-0.5">
+                            {userMessagesToc.map((item, tocIndex) => (
+                              <button
+                                key={item.index}
+                                type="button"
+                                onClick={() => scrollToMessage(item.index)}
+                                className={cn(
+                                  "w-full text-left px-2 py-1.5 rounded text-xs transition-colors",
+                                  "hover:bg-muted/80 text-muted-foreground hover:text-foreground",
+                                  "flex items-start gap-2",
+                                )}
+                              >
+                                <span className="shrink-0 w-4 h-4 rounded-full bg-primary/10 text-primary text-[10px] flex items-center justify-center font-medium">
+                                  {tocIndex + 1}
+                                </span>
+                                <span className="line-clamp-2 leading-snug">{item.preview}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </ScrollArea>
                       </div>
                     )}
 
-                  </CardHeader>
-
-                  {/* 消息列表区域 */}
-                  <CardContent className="flex-1 min-h-0 p-0">
-                    <div className="flex h-full min-w-0">
-                      {/* 消息列表 */}
-                      <ScrollArea className="flex-1 min-w-0">
-                        <div className="p-4 min-w-0">
-                          <div className="flex items-center gap-2 mb-3">
-                            <MessageSquare className="size-4 text-muted-foreground" />
-                            <span className="text-sm font-medium">
-                              {t("sessionManager.conversationHistory", {
-                                defaultValue: "对话记录",
-                              })}
-                            </span>
-                            <Badge variant="secondary" className="text-xs">
-                              {messages.length}
-                            </Badge>
-                          </div>
-
-                          {isLoadingMessages ? (
-                            <div className="flex items-center justify-center py-12">
-                              <RefreshCw className="size-5 animate-spin text-muted-foreground" />
-                            </div>
-                          ) : messages.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-12 text-center">
-                              <MessageSquare className="size-8 text-muted-foreground/50 mb-2" />
-                              <p className="text-sm text-muted-foreground">
-                                {t("sessionManager.emptySession")}
-                              </p>
-                            </div>
-                          ) : (
-                            <div className="space-y-3">
-                              {messages.map((message, index) => (
-                                <SessionMessageItem
-                                  key={`${message.role}-${index}`}
-                                  message={message}
-                                  index={index}
-                                  isActive={activeMessageIndex === index}
-                                  searchQuery={deferredSearch}
-                                  setRef={(el) => {
-                                    if (el) messageRefs.current.set(index, el);
-                                  }}
-                                  onCopy={(content) =>
-                                    handleCopy(
-                                      content,
-                                      t("sessionManager.messageCopied", {
-                                        defaultValue: "已复制消息内容",
-                                      }),
-                                    )
-                                  }
-                                />
-                              ))}
-                              <div ref={messagesEndRef} />
-                            </div>
-                          )}
-                        </div>
-                      </ScrollArea>
-
-                      {/* 右侧目录 - 类似少数派 (大屏幕) */}
-                      <SessionTocSidebar
-                        items={userMessagesToc}
-                        onItemClick={scrollToMessage}
-                      />
-                    </div>
-
-                    {/* 浮动目录按钮 (小屏幕) */}
+                    {/* 小屏幕浮动目录按钮 */}
                     <SessionTocDialog
                       items={userMessagesToc}
                       onItemClick={scrollToMessage}
                       open={tocDialogOpen}
                       onOpenChange={setTocDialogOpen}
                     />
-                  </CardContent>
+                  </div>
                 </>
               )}
-            </Card>
-          </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
       <ConfirmDialog
