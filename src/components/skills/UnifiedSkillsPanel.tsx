@@ -286,7 +286,7 @@ const UnifiedSkillsPanel = React.forwardRef<
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden pb-24">
+      <div className="app-scroll-y flex-1 overflow-x-hidden pb-24 pr-1">
         <div className="mb-4 rounded-xl border border-border-default bg-background/70 p-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-1">

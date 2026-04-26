@@ -71,4 +71,34 @@ describe("RequestLogTable", () => {
     expect(screen.getByText("Codex (Session)")).toBeInTheDocument();
     expect(screen.getByText("gpt-5.4")).toBeInTheDocument();
   });
+
+  it("renders the empty state with a horizontal-scroll hint", () => {
+    useRequestLogsMock.mockReturnValue({
+      data: {
+        data: [],
+        total: 0,
+        page: 0,
+        pageSize: 20,
+      },
+      isLoading: false,
+    });
+
+    const client = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+
+    render(
+      <QueryClientProvider client={client}>
+        <RequestLogTable appType="codex" refreshIntervalMs={0} />
+      </QueryClientProvider>,
+    );
+
+    expect(
+      screen.getByText(/表格可横向滚动|Table scrolls horizontally/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/暂无数据|No data/i)).toBeInTheDocument();
+  });
 });

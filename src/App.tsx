@@ -65,7 +65,7 @@ const ToolsWorkspace = lazy(loadToolsWorkspace);
 const SENSITIVE_KEY_PATTERN =
   /(token|secret|password|api[_-]?key|auth|cookie|session|credential|private[_-]?key)/i;
 const pageContainerClass =
-  "mx-auto flex w-full flex-1 flex-col gap-5 px-4 pb-8 md:px-6 lg:px-10 md:pb-10";
+  "mx-auto flex min-h-0 w-full flex-1 flex-col gap-5 px-4 pb-8 md:px-6 lg:px-10 md:pb-10";
 const toolbarNavButtonClass =
   "app-segmented-item h-9 shrink-0 px-3 text-[13px] font-medium";
 const sectionBadgeClass =

@@ -506,9 +506,9 @@ export function SessionManagerPage({ appId }: { appId: string }) {
 
   return (
     <TooltipProvider>
-      <div className="flex flex-col min-h-0 gap-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
           <div className="sticky top-0 z-20">
-            <div className="app-panel bg-white/82 px-4 py-4 shadow-sm dark:border-white/[0.08] dark:bg-slate-950/72">
+            <div className="app-panel app-sticky-surface px-4 py-4 shadow-sm">
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-2">
@@ -534,7 +534,7 @@ export function SessionManagerPage({ appId }: { appId: string }) {
                   )}
                 </div>
 
-                <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_180px_auto_auto]">
+                <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_160px_auto] xl:grid-cols-[minmax(0,1fr)_180px_auto_auto]">
                   <div className="relative min-w-0">
                     <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -674,13 +674,13 @@ export function SessionManagerPage({ appId }: { appId: string }) {
           </div>
 
           {/* 会话列表 - 全宽 */}
-          <Card className="flex flex-col overflow-hidden min-h-[300px] max-h-[calc(100vh-220px)]">
+          <Card className="flex min-h-[360px] flex-1 flex-col overflow-hidden">
             <CardHeader className="border-b px-4 py-4">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <CardTitle className="text-sm font-medium whitespace-nowrap">
                   {t("sessionManager.sessionList")}
                 </CardTitle>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex flex-wrap items-center justify-end gap-2 text-xs text-muted-foreground">
                   <span>
                     {t("sessionManager.visibleSessions", {
                       defaultValue: "当前显示 {{count}} 项",
@@ -705,7 +705,7 @@ export function SessionManagerPage({ appId }: { appId: string }) {
               <ScrollArea className="h-full">
                 <div className="p-2">
                   {isLoading ? (
-                    <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+                    <div className="app-loading-state border-0 bg-transparent shadow-none">
                       <RefreshCw className="size-5 animate-spin text-muted-foreground" />
                       <div className="space-y-1">
                         <p className="text-sm font-medium text-foreground">
@@ -722,8 +722,8 @@ export function SessionManagerPage({ appId }: { appId: string }) {
                       </div>
                     </div>
                   ) : filteredSessions.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <MessageSquare className="size-8 text-muted-foreground/50 mb-2" />
+                    <div className="app-empty-state">
+                      <MessageSquare className="mb-1 size-8 text-muted-foreground/50" />
                       <p className="text-sm font-medium text-foreground">
                         {sessions.length === 0
                           ? t("sessionManager.noSessions", {

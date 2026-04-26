@@ -106,10 +106,10 @@ export function UsageDashboard({
     refetchInterval: refreshIntervalMs > 0 ? refreshIntervalMs : false,
   });
 
-  const cardFallback = <div className="app-panel-inset h-[148px] animate-pulse" />;
-  const chartFallback = <div className="app-panel-inset h-[350px] animate-pulse" />;
-  const tableFallback = <div className="app-panel-inset h-[420px] animate-pulse" />;
-  const barFallback = <div className="app-panel-inset h-[48px] animate-pulse" />;
+  const cardFallback = <div className="app-loading-state h-[148px] animate-pulse" />;
+  const chartFallback = <div className="app-loading-state h-[350px] animate-pulse" />;
+  const tableFallback = <div className="app-loading-state h-[420px] animate-pulse" />;
+  const barFallback = <div className="app-loading-state h-[48px] animate-pulse" />;
 
   return (
     <motion.div
@@ -119,42 +119,50 @@ export function UsageDashboard({
       className={cn("space-y-6 pb-8", embedded && "space-y-5 pb-4")}
     >
       {/* ── Toolbar: time range + refresh ── */}
-      <div className="sticky top-0 z-10 app-panel bg-white/84 px-4 py-3 shadow-sm dark:border-white/[0.08] dark:bg-slate-950/72">
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 shrink-0 rounded-md border border-black/[0.08] bg-white/56 px-2.5 text-xs text-muted-foreground shadow-sm hover:bg-white/80 dark:border-white/[0.08] dark:bg-white/[0.04] dark:hover:bg-white/[0.09]"
-            title={t("common.refresh", "刷新")}
-            onClick={changeRefreshInterval}
-          >
-            <RefreshCw className="mr-1 h-3 w-3" />
-            {refreshIntervalMs > 0
-              ? `${refreshIntervalMs / 1000}s`
-              : t("common.manual", { defaultValue: "手动" })}
-          </Button>
+      <div className="app-panel app-sticky-surface sticky top-0 z-10 px-4 py-3 shadow-sm">
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 shrink-0 rounded-md border border-black/[0.08] bg-white/56 px-2.5 text-xs text-muted-foreground shadow-sm hover:bg-white/80 dark:border-white/[0.08] dark:bg-white/[0.04] dark:hover:bg-white/[0.09]"
+              title={t("common.refresh", "刷新")}
+              onClick={changeRefreshInterval}
+            >
+              <RefreshCw className="mr-1 h-3 w-3" />
+              {refreshIntervalMs > 0
+                ? `${refreshIntervalMs / 1000}s`
+                : t("common.manual", { defaultValue: "手动" })}
+            </Button>
 
-          {isRefiningFilters && (
-            <div className="rounded-full border border-black/[0.08] bg-white/72 px-2 py-0.5 text-[11px] text-muted-foreground dark:border-white/[0.08] dark:bg-white/[0.05]">
-              {t("common.loading", { defaultValue: "读取中" })}
+            {isRefiningFilters && (
+              <div className="rounded-full border border-black/[0.08] bg-white/72 px-2 py-0.5 text-[11px] text-muted-foreground dark:border-white/[0.08] dark:bg-white/[0.05]">
+                {t("common.loading", { defaultValue: "读取中" })}
+              </div>
+            )}
+
+            <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
+              <span className="truncate">
+                {(summaryData?.totalRequests ?? 0).toLocaleString()}{" "}
+                {t("usage.requestsLabel")}
+              </span>
+              <span className="text-border">|</span>
+              <span className="truncate">
+                {fmtUsd(parseFiniteNumber(summaryData?.totalCost) ?? 0, 4)}{" "}
+                {t("usage.costLabel")}
+              </span>
             </div>
-          )}
-
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <span>{(summaryData?.totalRequests ?? 0).toLocaleString()} {t("usage.requestsLabel")}</span>
-            <span className="text-border">|</span>
-            <span>{fmtUsd(parseFiniteNumber(summaryData?.totalCost) ?? 0, 4)} {t("usage.costLabel")}</span>
           </div>
 
-          <div className="ml-auto flex flex-wrap items-center gap-2">
+          <div className="app-scroll-x flex min-w-0 items-center gap-2 pb-1 xl:justify-end xl:pb-0">
             <Tabs
               value={timeRange}
               onValueChange={(value) =>
                 startTransition(() => setTimeRange(value as TimeRange))
               }
             >
-              <TabsList className="app-segmented flex">
+              <TabsList className="app-segmented flex-nowrap">
                 <TabsTrigger value="1d" className="app-tabs-trigger px-2.5 text-xs">
                   {t("usage.today", { defaultValue: "今天" })}
                 </TabsTrigger>
@@ -182,20 +190,20 @@ export function UsageDashboard({
 
             <input
               type="datetime-local"
-              className="box-border rounded-md border border-border bg-background px-1.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-primary/50"
+              className="box-border h-8 w-[178px] shrink-0 rounded-md border border-border bg-background px-1.5 text-center text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
               style={{ height: 32, lineHeight: "32px" }}
               value={customStart}
               onChange={(e) => setCustomStart(e.target.value)}
             />
-            <span className="text-xs text-muted-foreground">→</span>
+            <span className="shrink-0 text-xs text-muted-foreground">→</span>
             <input
               type="datetime-local"
-              className="box-border rounded-md border border-border bg-background px-1.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-primary/50"
+              className="box-border h-8 w-[178px] shrink-0 rounded-md border border-border bg-background px-1.5 text-center text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
               style={{ height: 32, lineHeight: "32px" }}
               value={customEnd}
               onChange={(e) => setCustomEnd(e.target.value)}
             />
-            <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+            <span className="shrink-0 whitespace-nowrap text-[11px] text-muted-foreground">
               {days}{t("usage.daysLabel", { defaultValue: "天" })}
             </span>
           </div>
@@ -203,15 +211,17 @@ export function UsageDashboard({
       </div>
 
       {/* ── 2-tab layout: 总览 / 请求日志 ── */}
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="app-segmented flex h-10 w-fit">
+      <Tabs defaultValue="overview" className="min-w-0 w-full">
+        <div className="app-scroll-x pb-1">
+          <TabsList className="app-segmented h-10 w-fit flex-nowrap">
           <TabsTrigger value="overview" className="app-tabs-trigger px-5">
             {t("usage.overview", { defaultValue: "总览" })}
           </TabsTrigger>
           <TabsTrigger value="logs" className="app-tabs-trigger px-5">
             {t("usage.requestLogs", { defaultValue: "请求日志" })}
           </TabsTrigger>
-        </TabsList>
+          </TabsList>
+        </div>
 
         {/* 总览 = 数据源 + 概览卡片 + 趋势图 + 供应商/模型统计 */}
         <TabsContent value="overview" className="mt-4 space-y-6">

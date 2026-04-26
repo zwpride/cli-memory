@@ -67,6 +67,9 @@ describe("ToolsWorkspace", () => {
     );
 
     expect(screen.getByText("Claude Prompt Management")).toBeInTheDocument();
+    expect(
+      screen.getByText("维护当前 CLI 的提示词模板和启用状态。"),
+    ).toBeInTheDocument();
     expect(screen.queryByText(/\{\{appName\}\}/)).not.toBeInTheDocument();
   });
 });

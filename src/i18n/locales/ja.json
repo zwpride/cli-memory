@@ -40,7 +40,20 @@
     "deleting": "削除中...",
     "auto": "自動",
     "enabled": "有効",
-    "notSet": "未設定"
+    "notSet": "未設定",
+    "manual": "手動",
+    "localConfig": "ローカル設定",
+    "tools": "ツール",
+    "toolsDescription": "Skills、Prompts、MCP、Agent 指示を一か所で管理し、ページ移動を減らします。"
+  },
+  "tools": {
+    "panelDescription": {
+      "skills": "インストール済み Skills、アプリ横断の有効化、ローカルインポートを管理します。",
+      "skillsDiscovery": "リポジトリやインデックスからインストール可能な Skills を探します。",
+      "prompts": "現在の CLI のプロンプトテンプレートと有効状態を管理します。",
+      "mcp": "MCP Server、既存設定のインポート、有効範囲の同期を管理します。",
+      "agents": "Agent 指示ファイル、プロジェクト設定、サブエージェント説明を確認・編集します。"
+    }
   },
   "firstRunNotice": {
     "title": "CLI Memory へようこそ",
@@ -1110,6 +1123,8 @@
       "failed": "セッション同期に失敗しました"
     },
     "totalRecords": "全 {{total}} 件",
+    "horizontalScrollHint": "表は横スクロールできます",
+    "noRequestLogsDescription": "現在の期間またはフィルターに一致するリクエスト記録はありません。条件を広げて再試行してください。",
     "modelPricing": "モデル料金",
     "loadPricingError": "料金データの読み込みに失敗しました",
     "modelPricingDesc": "各モデルのトークンコストを設定",

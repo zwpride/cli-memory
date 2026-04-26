@@ -191,6 +191,38 @@ html.dark body {
     overflow-x: hidden;
   }
 
+  .app-scroll-y {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 116, 139, 0.38) transparent;
+  }
+
+  .app-scroll-x {
+    min-width: 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 116, 139, 0.38) transparent;
+  }
+
+  .app-scroll-y::-webkit-scrollbar,
+  .app-scroll-x::-webkit-scrollbar,
+  .app-table-shell::-webkit-scrollbar {
+    display: block;
+    width: 8px;
+    height: 8px;
+  }
+
+  .app-scroll-y::-webkit-scrollbar-thumb,
+  .app-scroll-x::-webkit-scrollbar-thumb,
+  .app-table-shell::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(100, 116, 139, 0.34);
+  }
+
   .border-default {
     border-width: 1px;
     border-color: hsl(var(--border));
@@ -296,6 +328,7 @@ html.dark body {
   .app-shell {
     @apply liquid-glass-strong rounded-xl border;
     border-color: rgba(0, 0, 0, 0.06);
+    min-width: 0;
   }
 
   .dark .app-shell {
@@ -305,6 +338,7 @@ html.dark body {
   .app-panel {
     @apply liquid-glass rounded-lg border;
     border-color: rgba(0, 0, 0, 0.06);
+    min-width: 0;
   }
 
   .dark .app-panel {
@@ -314,6 +348,7 @@ html.dark body {
   .app-panel-inset {
     @apply rounded-lg border;
     border-color: rgba(0, 0, 0, 0.06);
+    min-width: 0;
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.72)),
       rgba(255, 255, 255, 0.60);
@@ -350,6 +385,7 @@ html.dark body {
   .app-segmented {
     @apply inline-flex flex-wrap items-center gap-1 rounded-lg border p-1;
     border-color: rgba(0, 0, 0, 0.08);
+    min-width: 0;
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.74)),
       rgba(255, 255, 255, 0.66);
@@ -448,7 +484,50 @@ html.dark body {
   }
 
   .app-table-shell {
-    @apply app-panel-inset overflow-hidden rounded-lg;
+    @apply app-panel-inset rounded-lg;
+    position: relative;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 116, 139, 0.38) transparent;
+  }
+
+  .app-table-shell::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset-block: 0;
+    right: 0;
+    width: 2rem;
+    background: linear-gradient(to left, rgba(255, 255, 255, 0.78), transparent);
+  }
+
+  .dark .app-table-shell::after {
+    background: linear-gradient(to left, rgba(17, 24, 39, 0.72), transparent);
+  }
+
+  .app-empty-state {
+    @apply flex flex-col items-center justify-center gap-2 px-4 py-12 text-center text-muted-foreground;
+  }
+
+  .app-loading-state {
+    @apply app-panel-inset flex items-center justify-center gap-3 text-sm text-muted-foreground;
+    min-height: 16rem;
+  }
+
+  .app-sticky-surface {
+    border-color: rgba(0, 0, 0, 0.06);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.76)),
+      rgba(255, 255, 255, 0.68);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .dark .app-sticky-surface {
+    border-color: rgba(255, 255, 255, 0.09);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.035)),
+      rgba(15, 23, 42, 0.7);
   }
 }
 

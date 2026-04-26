@@ -179,10 +179,10 @@ export function RequestLogTable({
     draftTimeMode === "rolling" ? getRollingRange() : null;
 
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 space-y-4">
       {/* 筛选栏 */}
-      <div className="app-panel-inset flex flex-col gap-4 p-4">
-        <div className="flex flex-wrap items-center gap-3">
+      <div className="app-panel-inset grid gap-4 p-4">
+        <div className="grid gap-3 xl:grid-cols-[132px_150px_minmax(0,1fr)]">
           <Select
             value={
               dashboardAppTypeActive
@@ -197,7 +197,7 @@ export function RequestLogTable({
             }
             disabled={!!dashboardAppTypeActive}
           >
-            <SelectTrigger className="w-[130px] bg-background">
+            <SelectTrigger className="h-9 w-full bg-background">
               <SelectValue placeholder={t("usage.appType")} />
             </SelectTrigger>
             <SelectContent>
@@ -222,7 +222,7 @@ export function RequestLogTable({
               })
             }
           >
-            <SelectTrigger className="w-[130px] bg-background">
+            <SelectTrigger className="h-9 w-full bg-background">
               <SelectValue placeholder={t("usage.statusCode")} />
             </SelectTrigger>
             <SelectContent>
@@ -235,12 +235,12 @@ export function RequestLogTable({
             </SelectContent>
           </Select>
 
-          <div className="flex items-center gap-2 flex-1 min-w-[300px]">
-            <div className="relative flex-1">
+          <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_180px]">
+            <div className="relative min-w-0">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={t("usage.searchProviderPlaceholder")}
-                className="pl-9 bg-background"
+                className="h-9 bg-background pl-9"
                 value={draftFilters.providerName || ""}
                 onChange={(e) =>
                   setDraftFilters({
@@ -252,7 +252,7 @@ export function RequestLogTable({
             </div>
             <Input
               placeholder={t("usage.searchModelPlaceholder")}
-              className="w-[180px] bg-background"
+              className="h-9 bg-background"
               value={draftFilters.model || ""}
               onChange={(e) =>
                 setDraftFilters({
@@ -264,12 +264,14 @@ export function RequestLogTable({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="whitespace-nowrap">{t("usage.timeRange")}:</span>
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+          <div className="grid min-w-0 gap-2 text-sm text-muted-foreground sm:grid-cols-[auto_minmax(0,200px)_auto_minmax(0,200px)] sm:items-center">
+            <span className="whitespace-nowrap">
+              {t("usage.timeRange")}:
+            </span>
             <Input
               type="datetime-local"
-              className="h-8 w-[200px] bg-background"
+              className="h-9 min-w-0 bg-background"
               value={
                 (rollingRangeForDisplay?.startDate ?? draftFilters.startDate)
                   ? timestampToLocalDatetime(
@@ -287,10 +289,10 @@ export function RequestLogTable({
                 });
               }}
             />
-            <span>-</span>
+            <span className="hidden text-center sm:block">-</span>
             <Input
               type="datetime-local"
-              className="h-8 w-[200px] bg-background"
+              className="h-9 min-w-0 bg-background"
               value={
                 (rollingRangeForDisplay?.endDate ?? draftFilters.endDate)
                   ? timestampToLocalDatetime(
@@ -310,12 +312,12 @@ export function RequestLogTable({
             />
           </div>
 
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="grid gap-2 sm:grid-cols-3 xl:ml-auto">
             <Button
               size="sm"
               variant="default"
               onClick={handleSearch}
-              className="h-8"
+              className="h-9"
             >
               <Search className="mr-2 h-3.5 w-3.5" />
               {t("common.search")}
@@ -324,7 +326,7 @@ export function RequestLogTable({
               size="sm"
               variant="outline"
               onClick={handleReset}
-              className="h-8"
+              className="h-9"
             >
               <X className="mr-2 h-3.5 w-3.5" />
               {t("common.reset")}
@@ -333,7 +335,8 @@ export function RequestLogTable({
               size="sm"
               variant="ghost"
               onClick={handleRefresh}
-              className="h-8 border border-black/[0.08] bg-white/56 px-2 shadow-sm hover:bg-white/80 dark:border-white/[0.08] dark:bg-white/[0.04] dark:hover:bg-white/[0.09]"
+              className="h-9 border border-black/[0.08] bg-white/56 px-2 shadow-sm hover:bg-white/80 dark:border-white/[0.08] dark:bg-white/[0.04] dark:hover:bg-white/[0.09]"
+              aria-label={t("common.refresh")}
             >
               <RefreshCw className="h-4 w-4" />
             </Button>
@@ -345,12 +348,31 @@ export function RequestLogTable({
         )}
       </div>
 
+      <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="text-sm font-semibold text-foreground">
+            {t("usage.requestLogs", { defaultValue: "请求日志" })}
+          </span>
+          <span className="rounded-full border border-black/[0.08] bg-white/70 px-2 py-0.5 text-[11px] text-muted-foreground dark:border-white/[0.08] dark:bg-white/[0.05]">
+            {t("usage.totalRecords", { total })}
+          </span>
+        </div>
+        <span className="text-[11px] text-muted-foreground">
+          {t("usage.horizontalScrollHint", {
+            defaultValue: "表格可横向滚动",
+          })}
+        </span>
+      </div>
+
       {isLoading ? (
-        <div className="app-panel-inset h-[400px] animate-pulse" />
+        <div className="app-loading-state h-[400px] animate-pulse">
+          <RefreshCw className="h-4 w-4 animate-spin" />
+          {t("common.loading", { defaultValue: "读取中" })}
+        </div>
       ) : (
         <>
-          <div className="app-table-shell overflow-x-auto">
-            <Table>
+          <div className="app-table-shell">
+            <Table className="min-w-[1180px]">
               <TableHeader className="bg-white/42 dark:bg-white/[0.03]">
                 <TableRow>
                   <TableHead className="whitespace-nowrap">
@@ -396,9 +418,20 @@ export function RequestLogTable({
                   <TableRow>
                     <TableCell
                       colSpan={12}
-                      className="text-center text-muted-foreground"
+                      className="py-0 text-center text-muted-foreground"
                     >
-                      {t("usage.noData")}
+                      <div className="app-empty-state">
+                        <Search className="h-6 w-6 text-muted-foreground/60" />
+                        <div className="text-sm font-medium text-foreground">
+                          {t("usage.noData", { defaultValue: "暂无数据" })}
+                        </div>
+                        <div className="max-w-md text-xs leading-5">
+                          {t("usage.noRequestLogsDescription", {
+                            defaultValue:
+                              "当前时间范围或筛选条件下没有请求记录。可以放宽筛选条件后再试。",
+                          })}
+                        </div>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -551,11 +584,11 @@ export function RequestLogTable({
 
           {/* 分页控件 */}
           {total > 0 && (
-            <div className="flex items-center justify-between px-2">
+            <div className="app-panel-inset flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
               <span className="text-sm text-muted-foreground">
                 {t("usage.totalRecords", { total })}
               </span>
-              <div className="flex items-center gap-1">
+              <div className="app-scroll-x flex items-center gap-1 pb-1 sm:justify-end sm:pb-0">
                 <Button
                   variant="outline"
                   size="sm"

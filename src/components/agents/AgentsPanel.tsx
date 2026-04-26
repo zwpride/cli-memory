@@ -105,7 +105,7 @@ export function AgentsPanel({ appId }: AgentsPanelProps) {
   ) ?? [];
 
   return (
-    <ScrollArea className="h-full">
+    <ScrollArea className="app-scroll-y h-full">
       <div className="p-5 lg:p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3">

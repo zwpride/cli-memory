@@ -25,12 +25,12 @@ export function ProviderStatsTable({
   });
 
   if (isLoading) {
-    return <div className="app-panel-inset h-[400px] animate-pulse" />;
+    return <div className="app-loading-state h-[400px] animate-pulse" />;
   }
 
   return (
     <div className="app-table-shell">
-      <Table>
+      <Table className="min-w-[760px]">
         <TableHeader className="bg-white/42 dark:bg-white/[0.03]">
           <TableRow>
             <TableHead>{t("usage.provider", "Provider")}</TableHead>
@@ -56,9 +56,11 @@ export function ProviderStatsTable({
             <TableRow>
               <TableCell
                 colSpan={6}
-                className="text-center text-muted-foreground"
+                className="py-0 text-center text-muted-foreground"
               >
-                {t("usage.noData", "暂无数据")}
+                <div className="app-empty-state">
+                  {t("usage.noData", "暂无数据")}
+                </div>
               </TableCell>
             </TableRow>
           ) : (

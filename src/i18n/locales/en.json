@@ -40,7 +40,20 @@
     "deleting": "Deleting...",
     "auto": "Auto",
     "enabled": "Enabled",
-    "notSet": "Not Set"
+    "notSet": "Not Set",
+    "manual": "Manual",
+    "localConfig": "Local Config",
+    "tools": "Tools",
+    "toolsDescription": "Manage Skills, Prompts, MCP, and Agent instructions in one place with less page switching."
+  },
+  "tools": {
+    "panelDescription": {
+      "skills": "Manage installed Skills, cross-app enablement, and local imports.",
+      "skillsDiscovery": "Discover installable Skills from repositories and indexes.",
+      "prompts": "Maintain prompt templates and enabled states for the current CLI.",
+      "mcp": "Manage MCP Servers, import existing config, and sync enabled scopes.",
+      "agents": "View and edit Agent instruction files, project config, and subagent notes."
+    }
   },
   "firstRunNotice": {
     "title": "Welcome to CLI Memory",
@@ -1110,6 +1123,8 @@
       "failed": "Session sync failed"
     },
     "totalRecords": "{{total}} records total",
+    "horizontalScrollHint": "Table scrolls horizontally",
+    "noRequestLogsDescription": "No request records match the current time range or filters. Try widening the filters.",
     "modelPricing": "Model Pricing",
     "loadPricingError": "Failed to load pricing data",
     "modelPricingDesc": "Configure token costs for each model",

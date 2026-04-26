@@ -139,7 +139,7 @@ const UnifiedMcpPanel = React.forwardRef<
         appIds={MCP_SKILLS_APP_IDS}
       />
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden pb-24">
+      <div className="app-scroll-y flex-1 overflow-x-hidden pb-24 pr-1">
         {isLoading ? (
           <div className="text-center py-12 text-muted-foreground">
             {t("mcp.loading")}

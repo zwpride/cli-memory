@@ -31,13 +31,13 @@ interface ToolsWorkspaceProps {
 }
 
 const pageContainerClass =
-  "mx-auto flex w-full flex-1 flex-col gap-5 px-4 pb-8 md:px-6 lg:px-10 md:pb-10";
+  "mx-auto flex min-h-0 w-full flex-1 flex-col gap-5 px-4 pb-8 md:px-6 lg:px-10 md:pb-10";
 const segmentedButtonClass =
-  "app-segmented-item h-10 px-4 text-sm font-medium";
+  "app-segmented-item h-10 shrink-0 px-4 text-sm font-medium";
 const sectionBadgeClass =
   "border-black/[0.08] bg-white/70 text-muted-foreground shadow-sm dark:border-white/[0.08] dark:bg-white/[0.05]";
 const utilityActionButtonClass =
-  "border border-black/[0.08] bg-white/72 text-foreground shadow-sm hover:bg-white/92 dark:border-white/[0.08] dark:bg-white/[0.05] dark:text-foreground dark:hover:bg-white/[0.1]";
+  "shrink-0 border border-black/[0.08] bg-white/72 text-foreground shadow-sm hover:bg-white/92 dark:border-white/[0.08] dark:bg-white/[0.05] dark:text-foreground dark:hover:bg-white/[0.1]";
 
 function toolPanelIcon(panel: ToolPanel) {
   switch (panel) {
@@ -69,6 +69,34 @@ function toolPanelLabel(
       return t("mcp.unifiedPanel.title");
     case "agents":
       return t("agents.title", { defaultValue: "Agents" });
+  }
+}
+
+function toolPanelDescription(
+  panel: ToolPanel,
+  t: ReturnType<typeof useTranslation>["t"],
+) {
+  switch (panel) {
+    case "skills":
+      return t("tools.panelDescription.skills", {
+        defaultValue: "管理已安装 Skills、跨应用启用状态和本地导入。",
+      });
+    case "skillsDiscovery":
+      return t("tools.panelDescription.skillsDiscovery", {
+        defaultValue: "从仓库和索引中发现可安装的 Skills。",
+      });
+    case "prompts":
+      return t("tools.panelDescription.prompts", {
+        defaultValue: "维护当前 CLI 的提示词模板和启用状态。",
+      });
+    case "mcp":
+      return t("tools.panelDescription.mcp", {
+        defaultValue: "管理 MCP Server、导入已有配置并同步启用范围。",
+      });
+    case "agents":
+      return t("tools.panelDescription.agents", {
+        defaultValue: "查看和编辑 Agent 指令文件、项目级配置和子智能体说明。",
+      });
   }
 }
 
@@ -212,9 +240,9 @@ export default function ToolsWorkspace({
 
   return (
     <div className={pageContainerClass}>
-      <section className="app-shell flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border-default/60 px-5 py-4 lg:px-6">
-          <div className="flex min-w-[220px] flex-1 items-start gap-3">
+      <section className="app-shell flex min-h-[520px] flex-1 flex-col overflow-hidden">
+        <div className="grid gap-4 border-b border-border-default/60 px-5 py-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start lg:px-6">
+          <div className="flex min-w-0 items-start gap-3">
             <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-black/[0.08] bg-white/76 text-foreground shadow-sm dark:border-white/[0.08] dark:bg-white/[0.06]">
               <FolderArchive className="h-4 w-4" />
             </span>
@@ -238,41 +266,53 @@ export default function ToolsWorkspace({
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center justify-end gap-2">
+          <div className="app-scroll-x flex min-w-0 items-center gap-2 pb-1 lg:justify-end lg:pb-0">
             {renderActions()}
           </div>
         </div>
 
-        <div className="border-b border-border-default/60 px-6 py-5 lg:px-8">
-          <div className="app-segmented w-fit">
-            {(["agents", "skills", "prompts", "mcp"] as const).map((panel) => (
-              <Button
-                key={panel}
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => onToolPanelChange(panel)}
-                className={cn(
-                  segmentedButtonClass,
-                  activeToolPanel === panel && "shadow-sm",
-                )}
-                data-active={activeToolPanel === panel}
-              >
-                <span className="mr-2 inline-flex items-center justify-center">
-                  {toolPanelIcon(panel)}
-                </span>
-                {toolPanelLabel(panel, activeApp, t)}
-              </Button>
-            ))}
-            {activeToolPanel === "skillsDiscovery" && (
-              <Badge variant="outline" className="h-10 rounded-lg px-4 text-sm">
-                {toolPanelLabel("skillsDiscovery", activeApp, t)}
-              </Badge>
-            )}
+        <div className="grid gap-3 border-b border-border-default/60 px-5 py-4 lg:px-6">
+          <div className="app-scroll-x pb-1">
+            <div className="app-segmented w-fit flex-nowrap">
+              {(["agents", "skills", "prompts", "mcp"] as const).map((panel) => (
+                <Button
+                  key={panel}
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onToolPanelChange(panel)}
+                  className={cn(
+                    segmentedButtonClass,
+                    activeToolPanel === panel && "shadow-sm",
+                  )}
+                  data-active={activeToolPanel === panel}
+                >
+                  <span className="mr-2 inline-flex items-center justify-center">
+                    {toolPanelIcon(panel)}
+                  </span>
+                  {toolPanelLabel(panel, activeApp, t)}
+                </Button>
+              ))}
+              {activeToolPanel === "skillsDiscovery" && (
+                <Badge
+                  variant="outline"
+                  className="h-10 shrink-0 rounded-lg px-4 text-sm"
+                >
+                  {toolPanelLabel("skillsDiscovery", activeApp, t)}
+                </Badge>
+              )}
+            </div>
+          </div>
+          <div className="text-xs leading-5 text-muted-foreground">
+            {toolPanelDescription(activeToolPanel, t)}
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-hidden">{renderContent()}</div>
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <div className="h-full min-h-0">
+            {renderContent()}
+          </div>
+        </div>
       </section>
     </div>
   );

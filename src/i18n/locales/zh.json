@@ -40,7 +40,20 @@
     "deleting": "删除中...",
     "auto": "自动",
     "enabled": "已开启",
-    "notSet": "未设置"
+    "notSet": "未设置",
+    "manual": "手动",
+    "localConfig": "本地配置",
+    "tools": "工具",
+    "toolsDescription": "这里集中管理 Skills、Prompts、MCP 和 Agent 指令，尽量减少跨页面跳转。"
+  },
+  "tools": {
+    "panelDescription": {
+      "skills": "管理已安装 Skills、跨应用启用状态和本地导入。",
+      "skillsDiscovery": "从仓库和索引中发现可安装的 Skills。",
+      "prompts": "维护当前 CLI 的提示词模板和启用状态。",
+      "mcp": "管理 MCP Server、导入已有配置并同步启用范围。",
+      "agents": "查看和编辑 Agent 指令文件、项目级配置和子智能体说明。"
+    }
   },
   "firstRunNotice": {
     "title": "欢迎使用 CLI Memory",
@@ -1111,6 +1124,8 @@
       "failed": "会话同步失败"
     },
     "totalRecords": "共 {{total}} 条记录",
+    "horizontalScrollHint": "表格可横向滚动",
+    "noRequestLogsDescription": "当前时间范围或筛选条件下没有请求记录。可以放宽筛选条件后再试。",
     "modelPricing": "模型定价",
     "loadPricingError": "加载定价数据失败",
     "modelPricingDesc": "配置各模型的 Token 成本",

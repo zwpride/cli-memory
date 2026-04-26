@@ -106,7 +106,7 @@ const PromptPanel = React.forwardRef<PromptPanelHandle, PromptPanelProps>(
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto pb-16">
+        <div className="app-scroll-y flex-1 pb-16 pr-1">
           {loading ? (
             <div className="text-center py-12 text-muted-foreground">
               {t("prompts.loading")}
