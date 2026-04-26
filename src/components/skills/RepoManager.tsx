@@ -98,7 +98,7 @@ export function RepoManager({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col p-0">
+      <DialogContent className="max-w-2xl p-0">
         {/* 固定头部 */}
         <DialogHeader className="flex-shrink-0 border-b border-border-default px-6 py-4">
           <DialogTitle>{t("skills.repo.title")}</DialogTitle>
@@ -106,9 +106,9 @@ export function RepoManager({
         </DialogHeader>
 
         {/* 可滚动内容区域 */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
+        <div className="app-dialog-body">
           {/* 添加仓库表单 */}
-          <div className="space-y-5">
+          <div className="app-form-section">
             <div className="space-y-2">
               <Label htmlFor="repo-url">{t("skills.repo.url")}</Label>
               <div className="flex flex-col gap-3">
@@ -145,18 +145,26 @@ export function RepoManager({
             <div className="space-y-3">
               <h4 className="text-sm font-medium">{t("skills.repo.list")}</h4>
               {repos.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  {t("skills.repo.empty")}
-                </p>
+                <div className="app-empty-state py-8">
+                  <p className="text-sm text-muted-foreground">
+                    {t("skills.repo.empty")}
+                  </p>
+                  <p className="max-w-md text-xs leading-5">
+                    {t("skills.repo.emptyDescription", {
+                      defaultValue:
+                        "添加一个 GitHub 仓库后，这里会显示它提供的 Skills 数量。",
+                    })}
+                  </p>
+                </div>
               ) : (
                 <div className="space-y-3">
                   {repos.map((repo) => (
                     <div
                       key={`${repo.owner}/${repo.name}`}
-                      className="flex items-center justify-between rounded-xl border border-border-default bg-card px-4 py-3"
+                      className="flex flex-col gap-3 rounded-xl border border-border-default bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                     >
-                      <div>
-                        <div className="text-sm font-medium text-foreground">
+                      <div className="min-w-0">
+                        <div className="break-all text-sm font-medium text-foreground">
                           {repo.owner}/{repo.name}
                         </div>
                         <div className="mt-1 text-xs text-muted-foreground">

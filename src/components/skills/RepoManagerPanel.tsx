@@ -90,11 +90,17 @@ export function RepoManagerPanel({
       onClose={onClose}
     >
       {/* 添加仓库表单 */}
-      <div className="space-y-4 glass-card rounded-xl p-6">
+      <div className="app-form-section">
         <h3 className="text-base font-semibold text-foreground">
           {t("skills.addRepo")}
         </h3>
-        <div className="space-y-4">
+        <p className="text-sm leading-6 text-muted-foreground">
+          {t("skills.repo.formHint", {
+            defaultValue:
+              "添加 GitHub 仓库后，CLI Memory 会从该仓库发现可安装的 Skills。",
+          })}
+        </p>
+        <div className="app-form-grid">
           <div>
             <Label htmlFor="repo-url" className="text-foreground">
               {t("skills.repo.url")}
@@ -119,18 +125,18 @@ export function RepoManagerPanel({
               className="mt-2"
             />
           </div>
-          {error && (
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-          )}
-          <Button
-            onClick={handleAdd}
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
-            type="button"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            {t("skills.repo.add")}
-          </Button>
         </div>
+        {error && (
+          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        )}
+        <Button
+          onClick={handleAdd}
+          className="bg-primary text-primary-foreground hover:bg-primary/90"
+          type="button"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          {t("skills.repo.add")}
+        </Button>
       </div>
 
       {/* 仓库列表 */}
@@ -139,9 +145,14 @@ export function RepoManagerPanel({
           {t("skills.repo.list")}
         </h3>
         {repos.length === 0 ? (
-          <div className="text-center py-12 glass-card rounded-xl">
+          <div className="app-empty-state app-panel-inset">
             <p className="text-sm text-muted-foreground">
               {t("skills.repo.empty")}
+            </p>
+            <p className="max-w-md text-xs leading-5">
+              {t("skills.repo.emptyDescription", {
+                defaultValue: "添加一个 GitHub 仓库后，这里会显示它提供的 Skills 数量。",
+              })}
             </p>
           </div>
         ) : (
@@ -149,10 +160,10 @@ export function RepoManagerPanel({
             {repos.map((repo) => (
               <div
                 key={`${repo.owner}/${repo.name}`}
-                className="flex items-center justify-between glass-card rounded-xl px-4 py-3"
+                className="app-panel-inset flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
               >
-                <div>
-                  <div className="text-sm font-medium text-foreground">
+                <div className="min-w-0">
+                  <div className="break-all text-sm font-medium text-foreground">
                     {repo.owner}/{repo.name}
                   </div>
                   <div className="mt-1 text-xs text-muted-foreground">

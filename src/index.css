@@ -514,6 +514,29 @@ html.dark body {
     min-height: 16rem;
   }
 
+  .app-form-section {
+    @apply app-panel-inset space-y-5 p-4 md:p-5;
+  }
+
+  .app-form-grid {
+    @apply grid gap-4 md:grid-cols-2;
+  }
+
+  .app-dialog-body {
+    @apply app-scroll-y flex-1 space-y-4 px-4 py-4 md:px-6;
+  }
+
+  .app-dialog-hint {
+    @apply rounded-lg border p-3 text-sm leading-6 text-muted-foreground;
+    border-color: rgba(0, 0, 0, 0.06);
+    background: rgba(255, 255, 255, 0.68);
+  }
+
+  .dark .app-dialog-hint {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.045);
+  }
+
   .app-sticky-surface {
     border-color: rgba(0, 0, 0, 0.06);
     background:

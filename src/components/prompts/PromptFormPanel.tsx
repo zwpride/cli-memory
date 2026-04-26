@@ -97,41 +97,55 @@ const PromptFormPanel: React.FC<PromptFormPanelProps> = ({
       title={title}
       onClose={onClose}
       footer={
-        <Button
-          type="button"
-          onClick={handleSave}
-          disabled={!name.trim() || saving}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {saving ? t("common.saving") : t("common.save")}
-        </Button>
+        <>
+          <Button type="button" variant="outline" onClick={onClose}>
+            {t("common.cancel")}
+          </Button>
+          <Button
+            type="button"
+            onClick={handleSave}
+            disabled={!name.trim() || saving}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving ? t("common.saving") : t("common.save")}
+          </Button>
+        </>
       }
     >
-      <div className="glass rounded-xl p-6 border border-white/10 space-y-6">
-        <div>
-          <Label htmlFor="name" className="text-foreground">
-            {t("prompts.name")}
-          </Label>
-          <Input
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={t("prompts.namePlaceholder")}
-            className="mt-2"
-          />
-        </div>
+      <div className="app-dialog-hint">
+        {t("prompts.formHint", {
+          defaultValue:
+            "提示词会保存到当前 CLI 的本地配置中，保存按钮固定在底部，长内容只滚动编辑区。",
+        })}
+      </div>
 
-        <div>
-          <Label htmlFor="description" className="text-foreground">
-            {t("prompts.description")}
-          </Label>
-          <Input
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder={t("prompts.descriptionPlaceholder")}
-            className="mt-2"
-          />
+      <div className="app-form-section">
+        <div className="app-form-grid">
+          <div>
+            <Label htmlFor="name" className="text-foreground">
+              {t("prompts.name")}
+            </Label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={t("prompts.namePlaceholder")}
+              className="mt-2"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="description" className="text-foreground">
+              {t("prompts.description")}
+            </Label>
+            <Input
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder={t("prompts.descriptionPlaceholder")}
+              className="mt-2"
+            />
+          </div>
         </div>
 
         <div>
@@ -143,7 +157,7 @@ const PromptFormPanel: React.FC<PromptFormPanelProps> = ({
             onChange={setContent}
             placeholder={t("prompts.contentPlaceholder", { filename })}
             darkMode={isDarkMode}
-            minHeight="167px"
+            minHeight="260px"
           />
         </div>
       </div>

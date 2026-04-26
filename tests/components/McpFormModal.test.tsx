@@ -259,6 +259,26 @@ describe("McpFormModal", () => {
     expect(toastErrorMock).not.toHaveBeenCalled();
   });
 
+  it("keeps the wizard action available and applies generated config", async () => {
+    renderForm();
+
+    fireEvent.click(screen.getByText("mcp.form.useWizard"));
+    fireEvent.click(screen.getByTestId("wizard-apply"));
+
+    const idInput = screen.getByPlaceholderText(
+      "mcp.form.titlePlaceholder",
+    ) as HTMLInputElement;
+    expect(idInput.value).toBe("wizard-id");
+
+    const configTextarea = screen.getByPlaceholderText(
+      "mcp.form.jsonPlaceholder",
+    ) as HTMLTextAreaElement;
+    expect(JSON.parse(configTextarea.value)).toEqual({
+      type: "stdio",
+      command: "wizard-cmd",
+    });
+  });
+
   it("缺少配置命令时阻止提交并提示错误", async () => {
     renderForm();
 

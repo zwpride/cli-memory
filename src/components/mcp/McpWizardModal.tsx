@@ -226,33 +226,31 @@ const McpWizardModal: React.FC<McpWizardModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
-        className="max-w-2xl max-h-[90vh] flex flex-col"
+        className="max-w-3xl"
         zIndex="alert"
       >
-        <DialogHeader className="space-y-3 border-b-0 bg-transparent pb-0">
+        <DialogHeader>
           <DialogTitle className="text-lg font-semibold">
             {t("mcp.wizard.title")}
           </DialogTitle>
         </DialogHeader>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+        <div className="app-dialog-body">
           {/* Hint */}
-          <div className="rounded-lg border border-border-default bg-gray-100/50 dark:bg-gray-800/50 p-3">
-            <p className="text-sm text-muted-foreground">
-              {t("mcp.wizard.hint")}
-            </p>
+          <div className="app-dialog-hint">
+            {t("mcp.wizard.hint")}
           </div>
 
           {/* Form Fields */}
-          <div className="space-y-4 min-h-[400px]">
+          <div className="app-form-section">
             {/* Type */}
             <div>
               <label className="mb-2 block text-sm font-medium text-foreground">
                 {t("mcp.wizard.type")} <span className="text-red-500">*</span>
               </label>
-              <div className="flex gap-4">
-                <label className="inline-flex items-center gap-2 cursor-pointer">
+              <div className="grid gap-2 sm:grid-cols-3">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border-default bg-background/70 px-3 py-2">
                   <input
                     type="radio"
                     value="stdio"
@@ -266,7 +264,7 @@ const McpWizardModal: React.FC<McpWizardModalProps> = ({
                     {t("mcp.wizard.typeStdio")}
                   </span>
                 </label>
-                <label className="inline-flex items-center gap-2 cursor-pointer">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border-default bg-background/70 px-3 py-2">
                   <input
                     type="radio"
                     value="http"
@@ -280,7 +278,7 @@ const McpWizardModal: React.FC<McpWizardModalProps> = ({
                     {t("mcp.wizard.typeHttp")}
                   </span>
                 </label>
-                <label className="inline-flex items-center gap-2 cursor-pointer">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border-default bg-background/70 px-3 py-2">
                   <input
                     type="radio"
                     value="sse"
@@ -341,7 +339,7 @@ const McpWizardModal: React.FC<McpWizardModalProps> = ({
                     onChange={(e) => setWizardArgs(e.target.value)}
                     placeholder={t("mcp.wizard.argsPlaceholder")}
                     rows={3}
-                    className="w-full rounded-md border border-border-default bg-background px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-y"
+                    className="min-h-[96px] w-full rounded-md border border-border-default bg-background px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-y"
                   />
                 </div>
 
@@ -355,7 +353,7 @@ const McpWizardModal: React.FC<McpWizardModalProps> = ({
                     onChange={(e) => setWizardEnv(e.target.value)}
                     placeholder={t("mcp.wizard.envPlaceholder")}
                     rows={3}
-                    className="w-full rounded-md border border-border-default bg-background px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-y"
+                    className="min-h-[96px] w-full rounded-md border border-border-default bg-background px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-y"
                   />
                 </div>
               </>
@@ -390,7 +388,7 @@ const McpWizardModal: React.FC<McpWizardModalProps> = ({
                     onChange={(e) => setWizardHeaders(e.target.value)}
                     placeholder={t("mcp.wizard.headersPlaceholder")}
                     rows={3}
-                    className="w-full rounded-md border border-border-default bg-background px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-y"
+                    className="min-h-[96px] w-full rounded-md border border-border-default bg-background px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-y"
                   />
                 </div>
               </>
@@ -403,11 +401,11 @@ const McpWizardModal: React.FC<McpWizardModalProps> = ({
             wizardEnv ||
             wizardUrl ||
             wizardHeaders) && (
-            <div className="space-y-2 border-t border-border-default pt-4">
+            <div className="app-form-section">
               <h3 className="text-sm font-medium text-foreground">
                 {t("mcp.wizard.preview")}
               </h3>
-              <pre className="overflow-x-auto rounded-lg bg-gray-100 dark:bg-gray-800 p-3 text-xs font-mono text-gray-700 dark:text-gray-300">
+              <pre className="app-scroll-x rounded-lg bg-gray-100 p-3 text-xs font-mono text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                 {preview}
               </pre>
             </div>
@@ -415,7 +413,7 @@ const McpWizardModal: React.FC<McpWizardModalProps> = ({
         </div>
 
         {/* Footer */}
-        <DialogFooter className="flex gap-2 border-t-0 bg-transparent pt-2 sm:justify-end">
+        <DialogFooter>
           <Button variant="outline" onClick={handleClose}>
             {t("common.cancel")}
           </Button>

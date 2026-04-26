@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -97,47 +98,59 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
             {editingId
               ? t("prompts.editTitle", { appName })
               : t("prompts.addTitle", { appName })}
           </DialogTitle>
+          <DialogDescription>
+            {t("prompts.formHint", {
+              defaultValue:
+                "提示词会保存到当前 CLI 的本地配置中，保存按钮固定在底部，长内容只滚动编辑区。",
+            })}
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto space-y-4 px-6 py-4">
-          <div>
-            <Label htmlFor="name">{t("prompts.name")}</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t("prompts.namePlaceholder")}
-            />
-          </div>
+        <div className="app-dialog-body">
+          <div className="app-form-section">
+            <div className="app-form-grid">
+              <div>
+                <Label htmlFor="name">{t("prompts.name")}</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={t("prompts.namePlaceholder")}
+                  className="mt-2"
+                />
+              </div>
 
-          <div>
-            <Label htmlFor="description">{t("prompts.description")}</Label>
-            <Input
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={t("prompts.descriptionPlaceholder")}
-            />
-          </div>
+              <div>
+                <Label htmlFor="description">{t("prompts.description")}</Label>
+                <Input
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder={t("prompts.descriptionPlaceholder")}
+                  className="mt-2"
+                />
+              </div>
+            </div>
 
-          <div>
-            <Label htmlFor="content" className="mb-2 block">
-              {t("prompts.content")}
-            </Label>
-            <MarkdownEditor
-              value={content}
-              onChange={setContent}
-              placeholder={t("prompts.contentPlaceholder", { filename })}
-              darkMode={isDarkMode}
-              minHeight="300px"
-            />
+            <div>
+              <Label htmlFor="content" className="mb-2 block">
+                {t("prompts.content")}
+              </Label>
+              <MarkdownEditor
+                value={content}
+                onChange={setContent}
+                placeholder={t("prompts.contentPlaceholder", { filename })}
+                darkMode={isDarkMode}
+                minHeight="300px"
+              />
+            </div>
           </div>
         </div>
 
