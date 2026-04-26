@@ -56,19 +56,19 @@ function FieldRow({
   if (!text) return null;
 
   return (
-    <div className="grid gap-1.5 rounded-lg border border-black/[0.06] bg-white/62 px-3 py-2 text-[11px] dark:border-white/10 dark:bg-white/[0.04] min-[620px]:grid-cols-[88px_minmax(0,1fr)_auto] min-[620px]:items-start">
-      <span className="flex items-center gap-1.5 pt-0.5 font-medium uppercase tracking-[0.1em] text-muted-foreground">
+    <div className="grid gap-2 rounded-lg border border-black/[0.06] bg-white/62 px-3 py-2 text-[11px] dark:border-white/10 dark:bg-white/[0.04] min-[680px]:grid-cols-[92px_minmax(0,1fr)_auto] min-[680px]:items-start">
+      <span className="flex items-center gap-1.5 pt-1 font-medium uppercase tracking-[0.1em] text-muted-foreground">
         {icon}
         {label}
       </span>
-      <code className="min-w-0 break-all font-mono leading-5 text-foreground/85">
+      <code className="min-w-0 rounded-md bg-black/[0.025] px-2 py-1 font-mono leading-5 text-foreground/85 [overflow-wrap:anywhere] dark:bg-white/[0.04]">
         {searchQuery ? highlightText(text, searchQuery) : text}
       </code>
       <Button
         type="button"
         variant="outline"
         size="sm"
-        className="h-7 justify-self-start rounded-lg px-2 text-[11px] min-[620px]:justify-self-end"
+        className="h-7 justify-self-start rounded-lg px-2 text-[11px] min-[680px]:justify-self-end"
         aria-label={copyLabel}
         onClick={(event) => {
           event.stopPropagation();
@@ -103,7 +103,7 @@ export function SessionItem({
   return (
     <div
       className={cn(
-        "group flex items-start gap-3 rounded-xl border px-4 py-3.5 transition-all duration-200",
+        "group flex cursor-pointer items-start gap-3 rounded-xl border px-3 py-3 transition-all duration-200 sm:px-4 sm:py-3.5",
         isSelected
           ? "border-primary/25 bg-white/82 shadow-sm dark:bg-white/[0.08]"
           : "border-black/[0.06] bg-white/48 hover:bg-white/64 dark:border-white/8 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]",
@@ -149,7 +149,7 @@ export function SessionItem({
               event.stopPropagation();
               onSelect(sessionKey);
             }}
-            className="min-w-0 flex-1 text-left text-sm font-medium leading-5 text-foreground"
+            className="min-w-0 flex-1 break-words text-left text-sm font-medium leading-5 text-foreground"
             title={title}
           >
             {searchQuery ? highlightText(title, searchQuery) : title}
@@ -181,7 +181,7 @@ export function SessionItem({
 
         {summary && (
           <p
-            className="mt-1 text-[11px] leading-5 text-muted-foreground"
+            className="mt-2 line-clamp-2 text-[11px] leading-5 text-muted-foreground"
             title={summary}
           >
             {searchQuery ? highlightText(summary, searchQuery) : summary}

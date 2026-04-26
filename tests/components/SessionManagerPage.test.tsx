@@ -103,9 +103,7 @@ const renderPageInWheelWrapper = (onWheel: () => void) => {
 
 /** Wait for session list to load, then click the given session to open its dialog */
 async function openSession(name: string) {
-  await waitFor(() =>
-    expect(screen.getByText(name)).toBeInTheDocument(),
-  );
+  await waitFor(() => expect(screen.getByText(name)).toBeInTheDocument());
   fireEvent.click(screen.getByText(name));
   await waitFor(() =>
     expect(screen.getByTestId("session-dialog")).toBeInTheDocument(),
@@ -200,6 +198,25 @@ describe("SessionManagerPage", () => {
     await waitFor(() =>
       expect(clipboardWriteTextMock).toHaveBeenCalledWith(
         "/volume/pt-coder/users/wzhang/coder/swe",
+      ),
+    );
+    expect(screen.queryByTestId("session-dialog")).not.toBeInTheDocument();
+  });
+
+  it("copies the visible resume command from the list without opening the detail dialog", async () => {
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.getByText("Alpha Session")).toBeInTheDocument(),
+    );
+
+    fireEvent.click(
+      screen.getAllByRole("button", { name: /复制恢复命令/i })[0],
+    );
+
+    await waitFor(() =>
+      expect(clipboardWriteTextMock).toHaveBeenCalledWith(
+        "codex --yolo resume codex-session-1",
       ),
     );
     expect(screen.queryByTestId("session-dialog")).not.toBeInTheDocument();
@@ -333,18 +350,44 @@ describe("SessionManagerPage", () => {
     expect(screen.getByRole("textbox")).toHaveValue("");
   });
 
+  it("shows a stable empty state when search has no matching sessions", async () => {
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.getByText("Alpha Session")).toBeInTheDocument(),
+    );
+
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "NoSuchSession" },
+    });
+
+    await waitFor(() =>
+      expect(screen.queryByText("Alpha Session")).not.toBeInTheDocument(),
+    );
+    expect(
+      screen.getByText(/当前筛选下没有匹配的会话|no matching sessions/i),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("textbox")).toHaveValue("NoSuchSession");
+  });
+
   it("deletes the selected session via the detail dialog", async () => {
     renderPage();
     await openSession("Alpha Session");
 
     const sessionDialog = screen.getByTestId("session-dialog");
-    fireEvent.click(within(sessionDialog).getByRole("button", { name: /删除/i }));
+    fireEvent.click(
+      within(sessionDialog).getByRole("button", { name: /删除/i }),
+    );
 
     const confirmDialog = screen.getByTestId("confirm-dialog");
     expect(confirmDialog).toBeInTheDocument();
-    expect(within(confirmDialog).getByText(/Alpha Session/)).toBeInTheDocument();
+    expect(
+      within(confirmDialog).getByText(/Alpha Session/),
+    ).toBeInTheDocument();
 
-    fireEvent.click(within(confirmDialog).getByRole("button", { name: /删除/i }));
+    fireEvent.click(
+      within(confirmDialog).getByRole("button", { name: /删除/i }),
+    );
 
     await waitFor(() =>
       expect(screen.queryByText("Alpha Session")).not.toBeInTheDocument(),
@@ -360,10 +403,14 @@ describe("SessionManagerPage", () => {
 
     // Delete from dialog
     const sessionDialog = screen.getByTestId("session-dialog");
-    fireEvent.click(within(sessionDialog).getByRole("button", { name: /删除/i }));
+    fireEvent.click(
+      within(sessionDialog).getByRole("button", { name: /删除/i }),
+    );
 
     const confirmDialog = screen.getByTestId("confirm-dialog");
-    fireEvent.click(within(confirmDialog).getByRole("button", { name: /删除/i }));
+    fireEvent.click(
+      within(confirmDialog).getByRole("button", { name: /删除/i }),
+    );
 
     await waitFor(() =>
       expect(screen.queryByText("Alpha Session")).not.toBeInTheDocument(),
