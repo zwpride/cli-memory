@@ -494,7 +494,7 @@ impl ProviderAdapter for ClaudeAdapter {
                     ),
                     (
                         HeaderName::from_static("originator"),
-                        HeaderValue::from_static("cc-switch"),
+                        HeaderValue::from_static("cli-memory"),
                     ),
                 ]
             }

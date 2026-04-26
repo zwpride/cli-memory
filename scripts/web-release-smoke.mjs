@@ -15,7 +15,7 @@ function fail(message) {
 
 function usage() {
   console.log(`Usage:
-  node scripts/web-release-smoke.mjs --binary /abs/path/to/cc-switch-web
+  node scripts/web-release-smoke.mjs --binary /abs/path/to/cli-memory-web
   node scripts/web-release-smoke.mjs --url http://127.0.0.1:17666
 
 Options:
@@ -152,7 +152,7 @@ async function waitForHttp(url, timeoutMs, child, logFile) {
 }
 
 function createTempHome() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "cc-switch-web-release-smoke-"));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "cli-memory-web-release-smoke-"));
   const homeDir = path.join(root, "home");
   const appDataDir = path.join(homeDir, "AppData", "Roaming");
   const localAppDataDir = path.join(homeDir, "AppData", "Local");
@@ -169,19 +169,19 @@ function startBinary(binary, port, host, timeoutSecs) {
   const env = {
     ...process.env,
     APPDATA: temp.appDataDir,
-    CC_SWITCH_AUTO_PORT: "false",
-    CC_SWITCH_PORT: String(port),
+    CLI_MEMORY_AUTO_PORT: "false",
+    CLI_MEMORY_PORT: String(port),
     HOME: temp.homeDir,
     LOCALAPPDATA: temp.localAppDataDir,
     USERPROFILE: temp.homeDir,
   };
 
   if (host) {
-    env.CC_SWITCH_HOST = host;
+    env.CLI_MEMORY_HOST = host;
   }
 
   if (timeoutSecs) {
-    env.CC_SWITCH_START_TIMEOUT = String(timeoutSecs);
+    env.CLI_MEMORY_START_TIMEOUT = String(timeoutSecs);
   }
 
   const child = spawn(binary, [], {
@@ -310,7 +310,7 @@ async function main() {
       await waitForHttp(url, timeoutMs, startedBinary.child, startedBinary.logFile);
     } else {
       tempRoot = fs.mkdtempSync(
-        path.join(os.tmpdir(), "cc-switch-web-release-smoke-url-"),
+        path.join(os.tmpdir(), "cli-memory-web-release-smoke-url-"),
       );
     }
 

@@ -383,7 +383,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "cc-switch"
+name = "cli-memory"
 version = "3.12.8"
 dependencies = [
  "anyhow",
@@ -427,10 +427,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "cc-switch-core"
+name = "cli-memory-core"
 version = "0.1.0"
 dependencies = [
- "cc-switch",
+ "cli-memory",
  "chrono",
  "dirs 5.0.1",
  "indexmap 2.12.1",

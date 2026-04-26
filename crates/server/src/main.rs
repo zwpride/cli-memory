@@ -122,8 +122,22 @@ fn is_loopback_host(host: &str) -> bool {
 fn local_access_host(host: &str) -> String {
     match host {
         "0.0.0.0" | "*" => "127.0.0.1".to_string(),
-        "::" => "[::1]".to_string(),
         _ => host.to_string(),
+    }
+}
+
+fn normalize_bind_host(host: String) -> String {
+    match host.trim() {
+        "" | "localhost" => "127.0.0.1".to_string(),
+        value => value.to_string(),
+    }
+}
+
+fn reject_ipv6_bind_host(host: &str) {
+    if host.contains(':') {
+        eprintln!("❌ Error: IPv6 bind hosts are not supported");
+        eprintln!("   Use 0.0.0.0 for SSH proxy access or 127.0.0.1 for local-only access.");
+        std::process::exit(1);
     }
 }
 
@@ -168,7 +182,7 @@ async fn main() {
     });
 
     // Create server state
-    let auth_token = std::env::var("CC_SWITCH_AUTH_TOKEN").ok();
+    let auth_token = std::env::var("CLI_MEMORY_AUTH_TOKEN").ok();
     let state = ServerState::new(auth_token, event_bus, session_store, auth_config);
 
     // Session usage sync for web/headless mode: keep Codex/Gemini/Claude stats in sync
@@ -249,8 +263,10 @@ async fn main() {
         .unwrap_or(17666);
 
     // Get host from environment or use default
-    let host = std::env::var("CLI_MEMORY_HOST")
-        .unwrap_or_else(|_| "0.0.0.0".to_string());
+    let host = normalize_bind_host(
+        std::env::var("CLI_MEMORY_HOST").unwrap_or_else(|_| "0.0.0.0".to_string()),
+    );
+    reject_ipv6_bind_host(&host);
 
     // Check if auto-port selection is enabled (default: true)
     let auto_port = std::env::var("CLI_MEMORY_AUTO_PORT")
@@ -279,7 +295,7 @@ async fn main() {
                 eprintln!();
                 eprintln!("   Solutions:");
                 eprintln!("   1. Stop the process using port {}: lsof -ti:{} | xargs kill", requested_port, requested_port);
-                eprintln!("   2. Use a different port: CLI_MEMORY_PORT=8080 ./cc-switch-web");
+                eprintln!("   2. Use a different port: CLI_MEMORY_PORT=8080 ./cli-memory-web");
                 eprintln!();
                 std::process::exit(1);
             }
@@ -296,11 +312,11 @@ async fn main() {
         eprintln!("      lsof -ti:{} | xargs kill", requested_port);
         eprintln!();
         eprintln!("   2. Use a different port:");
-        eprintln!("      CLI_MEMORY_PORT=8080 ./cc-switch-web");
+        eprintln!("      CLI_MEMORY_PORT=8080 ./cli-memory-web");
         if is_loopback {
             eprintln!();
             eprintln!("   3. Enable auto-port selection:");
-            eprintln!("      CLI_MEMORY_AUTO_PORT=true ./cc-switch-web");
+            eprintln!("      CLI_MEMORY_AUTO_PORT=true ./cli-memory-web");
         }
         eprintln!();
         std::process::exit(1);

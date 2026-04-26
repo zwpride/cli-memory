@@ -4,7 +4,7 @@ use crate::error::AppError;
 use auto_launch::{AutoLaunch, AutoLaunchBuilder};
 
 /// 获取 macOS 上的 .app bundle 路径
-/// 将 `/path/to/CC Switch.app/Contents/MacOS/CC Switch` 转换为 `/path/to/CC Switch.app`
+/// 将 `/path/to/CLI Memory.app/Contents/MacOS/CLI Memory` 转换为 `/path/to/CLI Memory.app`
 #[cfg(target_os = "macos")]
 fn get_macos_app_bundle_path(exe_path: &std::path::Path) -> Option<std::path::PathBuf> {
     let path_str = exe_path.to_string_lossy();
@@ -19,7 +19,7 @@ fn get_macos_app_bundle_path(exe_path: &std::path::Path) -> Option<std::path::Pa
 
 /// 初始化 AutoLaunch 实例
 fn get_auto_launch() -> Result<AutoLaunch, AppError> {
-    let app_name = "CC Switch";
+    let app_name = "CLI Memory";
     let exe_path =
         std::env::current_exe().map_err(|e| AppError::Message(format!("无法获取应用路径: {e}")))?;
 
@@ -78,11 +78,11 @@ mod tests {
     #[cfg(target_os = "macos")]
     #[test]
     fn test_get_macos_app_bundle_path_valid() {
-        let exe_path = std::path::Path::new("/Applications/CC Switch.app/Contents/MacOS/CC Switch");
+        let exe_path = std::path::Path::new("/Applications/CLI Memory.app/Contents/MacOS/CLI Memory");
         let result = get_macos_app_bundle_path(exe_path);
         assert_eq!(
             result,
-            Some(std::path::PathBuf::from("/Applications/CC Switch.app"))
+            Some(std::path::PathBuf::from("/Applications/CLI Memory.app"))
         );
     }
 
@@ -90,12 +90,12 @@ mod tests {
     #[test]
     fn test_get_macos_app_bundle_path_with_spaces() {
         let exe_path =
-            std::path::Path::new("/Users/test/My Apps/CC Switch.app/Contents/MacOS/CC Switch");
+            std::path::Path::new("/Users/test/My Apps/CLI Memory.app/Contents/MacOS/CLI Memory");
         let result = get_macos_app_bundle_path(exe_path);
         assert_eq!(
             result,
             Some(std::path::PathBuf::from(
-                "/Users/test/My Apps/CC Switch.app"
+                "/Users/test/My Apps/CLI Memory.app"
             ))
         );
     }
@@ -103,7 +103,7 @@ mod tests {
     #[cfg(target_os = "macos")]
     #[test]
     fn test_get_macos_app_bundle_path_not_in_bundle() {
-        let exe_path = std::path::Path::new("/usr/local/bin/cc-switch");
+        let exe_path = std::path::Path::new("/usr/local/bin/cli-memory");
         let result = get_macos_app_bundle_path(exe_path);
         assert_eq!(result, None);
     }
@@ -112,7 +112,7 @@ mod tests {
     #[test]
     fn test_get_macos_app_bundle_path_dev_build() {
         // 开发环境下的路径通常不在 .app bundle 内
-        let exe_path = std::path::Path::new("/Users/dev/project/target/debug/cc-switch");
+        let exe_path = std::path::Path::new("/Users/dev/project/target/debug/cli-memory");
         let result = get_macos_app_bundle_path(exe_path);
         assert_eq!(result, None);
     }

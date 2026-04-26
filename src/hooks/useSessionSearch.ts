@@ -1,5 +1,7 @@
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 
+import { sessionsApi } from "@/lib/api";
 import type { SessionMeta } from "@/types";
 
 interface UseSessionSearchOptions {
@@ -10,6 +12,7 @@ interface UseSessionSearchOptions {
 
 interface UseSessionSearchResult {
   filteredSessions: SessionMeta[];
+  isSearching: boolean;
 }
 
 function normalizeSearchValue(value: string | null | undefined) {
@@ -24,6 +27,8 @@ function buildSearchText(session: SessionMeta) {
       session.summary,
       session.projectDir,
       session.sourcePath,
+      session.resumeCommand,
+      session.sessionKind,
     ]
       .filter(Boolean)
       .join(" "),
@@ -54,7 +59,7 @@ export function useSessionSearch({
 
   const normalizedQuery = normalizeSearchValue(query);
 
-  const filteredSessions = useMemo(() => {
+  const metadataMatches = useMemo(() => {
     if (!normalizedQuery) {
       return filteredByProvider;
     }
@@ -70,5 +75,20 @@ export function useSessionSearch({
     });
   }, [filteredByProvider, normalizedQuery]);
 
-  return { filteredSessions };
+  const { data: searchResults, isFetching: isSearching } = useQuery<SessionMeta[]>({
+    queryKey: ["sessionSearch", providerFilter, normalizedQuery],
+    queryFn: () =>
+      sessionsApi.search(
+        normalizedQuery,
+        providerFilter === "all" ? undefined : providerFilter,
+      ),
+    enabled: normalizedQuery.length > 0,
+    staleTime: 30 * 1000,
+  });
+
+  const filteredSessions = normalizedQuery
+    ? searchResults ?? metadataMatches
+    : filteredByProvider;
+
+  return { filteredSessions, isSearching };
 }

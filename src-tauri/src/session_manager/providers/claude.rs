@@ -186,9 +186,7 @@ pub fn delete_session(_root: &Path, path: &Path, session_id: &str) -> Result<boo
 }
 
 fn parse_session(path: &Path) -> Option<SessionMeta> {
-    if is_agent_session(path) {
-        return None;
-    }
+    let session_kind = detect_session_kind(path);
 
     let (head, tail) = read_head_tail_lines(path, 10, 30).ok()?;
 
@@ -313,15 +311,30 @@ fn parse_session(path: &Path) -> Option<SessionMeta> {
         created_at,
         last_active_at,
         source_path: Some(path.to_string_lossy().to_string()),
-        resume_command: Some(format!("claude --resume {session_id}")),
+        resume_command: session_kind.as_ref().map_or_else(
+            || {
+                Some(format!(
+                    "IS_SANDBOX=1 claude --dangerously-skip-permissions --resume {session_id}"
+                ))
+            },
+            |_| None,
+        ),
+        session_kind,
     })
 }
 
-fn is_agent_session(path: &Path) -> bool {
+fn detect_session_kind(path: &Path) -> Option<String> {
+    if path
+        .components()
+        .any(|component| component.as_os_str().to_string_lossy() == "subagents")
+    {
+        return Some("subagent".to_string());
+    }
+
     path.file_name()
         .and_then(|name| name.to_str())
-        .map(|name| name.starts_with("agent-"))
-        .unwrap_or(false)
+        .filter(|name| name.starts_with("agent-"))
+        .map(|_| "agent".to_string())
 }
 
 fn infer_session_id_from_filename(path: &Path) -> Option<String> {
@@ -466,6 +479,46 @@ mod tests {
 
         let meta = parse_session(&path).unwrap();
         assert_eq!(meta.title.as_deref(), Some("How do I deploy?"));
+    }
+
+    #[test]
+    fn parse_session_includes_top_level_agent_sessions_without_resume() {
+        let temp = tempdir().expect("tempdir");
+        let path = temp.path().join("agent-abc.jsonl");
+        std::fs::write(
+            &path,
+            concat!(
+                "{\"sessionId\":\"agent-abc\",\"cwd\":\"/tmp/project\",\"timestamp\":\"2026-03-06T10:00:00Z\"}\n",
+                "{\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":\"Run the agent task\"},\"sessionId\":\"agent-abc\",\"timestamp\":\"2026-03-06T10:01:00Z\"}\n",
+            ),
+        )
+        .expect("write");
+
+        let meta = parse_session(&path).unwrap();
+
+        assert_eq!(meta.session_kind.as_deref(), Some("agent"));
+        assert_eq!(meta.resume_command, None);
+    }
+
+    #[test]
+    fn parse_session_marks_subagent_paths_without_resume() {
+        let temp = tempdir().expect("tempdir");
+        let dir = temp.path().join("session-sidecar").join("subagents");
+        std::fs::create_dir_all(&dir).expect("create subagent dir");
+        let path = dir.join("worker.jsonl");
+        std::fs::write(
+            &path,
+            concat!(
+                "{\"sessionId\":\"worker-1\",\"cwd\":\"/tmp/project\",\"timestamp\":\"2026-03-06T10:00:00Z\"}\n",
+                "{\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":\"Check the delegated task\"},\"sessionId\":\"worker-1\",\"timestamp\":\"2026-03-06T10:01:00Z\"}\n",
+            ),
+        )
+        .expect("write");
+
+        let meta = parse_session(&path).unwrap();
+
+        assert_eq!(meta.session_kind.as_deref(), Some("subagent"));
+        assert_eq!(meta.resume_command, None);
     }
 
     #[test]

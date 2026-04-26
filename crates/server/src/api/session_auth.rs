@@ -2,7 +2,7 @@ use axum::http::HeaderMap;
 
 use crate::state::ServerState;
 
-pub(crate) const SESSION_COOKIE_NAME: &str = "cc-switch-session";
+pub(crate) const SESSION_COOKIE_NAME: &str = "cli-memory-session";
 
 pub(crate) fn extract_session_cookie(headers: &HeaderMap) -> Option<String> {
     headers

@@ -6,9 +6,9 @@ use axum::{
     routing::post,
     Router,
 };
-use cc_switch::{AppState, Database};
-use cc_switch_core::CoreContext;
-use cc_switch_server::{
+use cli_memory::{AppState, Database};
+use cli_memory_core::CoreContext;
+use cli_memory_server::{
     api::import_sql_upload_handler,
     create_event_bus,
     AuthConfig, ServerState, SessionStore,
@@ -34,7 +34,7 @@ async fn unauthenticated_sql_upload_is_rejected_when_web_auth_is_enabled() {
 
     let boundary = "X-BOUNDARY";
     let body = format!(
-        "--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"config.sql\"\r\nContent-Type: application/sql\r\n\r\n-- CC Switch SQLite 导出\nSELECT 1;\r\n--{boundary}--\r\n"
+        "--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"config.sql\"\r\nContent-Type: application/sql\r\n\r\n-- CLI Memory SQLite 导出\nSELECT 1;\r\n--{boundary}--\r\n"
     );
 
     let response = app
@@ -74,7 +74,7 @@ async fn invalid_sql_upload_does_not_pollute_existing_database() {
 
     let boundary = "X-BOUNDARY";
     let body = format!(
-        "--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"config.sql\"\r\nContent-Type: application/sql\r\n\r\n-- CC Switch SQLite 导出\nTHIS IS NOT VALID SQL;\r\n--{boundary}--\r\n"
+        "--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"config.sql\"\r\nContent-Type: application/sql\r\n\r\n-- CLI Memory SQLite 导出\nTHIS IS NOT VALID SQL;\r\n--{boundary}--\r\n"
     );
 
     let response = app

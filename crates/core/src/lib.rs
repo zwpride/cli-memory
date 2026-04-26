@@ -1,7 +1,7 @@
 //! cli-memory-core
 //!
 //! 该 crate 提供与 UI 无关的核心业务封装，供 Web 服务器等复用。
-//! 当前实现基于现有的 `cc_switch`（src-tauri）进行轻量封装，
+//! 当前实现基于现有的 `cli_memory`（src-tauri）进行轻量封装，
 //! 后续可以逐步将纯业务逻辑下沉到本 crate。
 
 mod claude_auth;
@@ -11,7 +11,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::{collections::HashMap, path::Path, path::PathBuf};
 
-use cc_switch::{
+use cli_memory::{
     default_sql_export_file_name, export_database_sql, export_database_to_file,
     get_all_usage_data_sources, import_database_with_sync, sync_all_session_usage, AppError,
     AppSettings, AppState, AppType, DataSourceSummary, Database, SessionSyncResult,
@@ -21,7 +21,7 @@ use chrono::Utc;
 use indexmap::IndexMap;
 
 /// 对外暴露的核心类型别名，便于直接使用
-pub use cc_switch::{
+pub use cli_memory::{
     AppSettings as CoreAppSettings, AppType as CoreAppType, BackupEntry, ConfigStatus, DailyStats,
     DataSourceSummary as CoreDataSourceSummary, DiscoverableSkill, HealthStatus, LogConfig,
     LogFilters, McpServer as CoreMcpServer, ModelPricingInfo as CoreModelPricingInfo, ModelStats,
@@ -47,7 +47,7 @@ pub struct CoreContext {
 impl CoreContext {
     /// 初始化核心上下文
     ///
-    /// - 打开/初始化 `~/.cli-memory/cc-switch.db`
+    /// - 打开/初始化 `~/.cli-memory/cli-memory.db`
     /// - 构造 `AppState`
     /// - 尝试初始化 `SkillService`（失败时只记录为 None，不阻塞其它功能）
     pub fn new() -> Result<Self, AppError> {
@@ -321,7 +321,7 @@ pub fn read_global_configs(app: &str) -> Result<serde_json::Value, String> {
 
     match app {
         "claude" => {
-            let dir = cc_switch::get_claude_config_dir();
+            let dir = cli_memory::get_claude_config_dir();
             let candidates = vec![
                 ("settings.json", "json"),
                 ("claude.json", "json"),
@@ -342,7 +342,7 @@ pub fn read_global_configs(app: &str) -> Result<serde_json::Value, String> {
             files.extend(scan_config_dir(&agents_dir, "agents", "markdown", "global"));
         }
         "codex" => {
-            let dir = cc_switch::get_codex_config_dir();
+            let dir = cli_memory::get_codex_config_dir();
             let candidates = vec![
                 ("auth.json", "json"),
                 ("config.toml", "toml"),
@@ -356,7 +356,7 @@ pub fn read_global_configs(app: &str) -> Result<serde_json::Value, String> {
             }
         }
         "gemini" => {
-            let dir = cc_switch::get_gemini_dir();
+            let dir = cli_memory::get_gemini_dir();
             let candidates = vec![
                 (".env", "env"),
                 ("settings.json", "json"),
@@ -369,7 +369,7 @@ pub fn read_global_configs(app: &str) -> Result<serde_json::Value, String> {
             }
         }
         "opencode" => {
-            let dir = cc_switch::get_opencode_dir();
+            let dir = cli_memory::get_opencode_dir();
             let candidates = vec![
                 ("opencode.json", "json"),
                 ("instructions.md", "markdown"),
@@ -796,7 +796,7 @@ pub fn get_request_detail(
 }
 
 pub fn get_model_pricing(ctx: &CoreContext) -> Result<Vec<CoreModelPricingInfo>, String> {
-    cc_switch::list_model_pricing(&ctx.app_state().db).map_err(|e| e.to_string())
+    cli_memory::list_model_pricing(&ctx.app_state().db).map_err(|e| e.to_string())
 }
 
 pub fn update_model_pricing(
@@ -808,7 +808,7 @@ pub fn update_model_pricing(
     cache_read_cost: String,
     cache_creation_cost: String,
 ) -> Result<(), String> {
-    cc_switch::upsert_model_pricing(
+    cli_memory::upsert_model_pricing(
         &ctx.app_state().db,
         model_id,
         display_name,
@@ -821,7 +821,7 @@ pub fn update_model_pricing(
 }
 
 pub fn delete_model_pricing(ctx: &CoreContext, model_id: String) -> Result<(), String> {
-    cc_switch::remove_model_pricing(&ctx.app_state().db, model_id).map_err(|e| e.to_string())
+    cli_memory::remove_model_pricing(&ctx.app_state().db, model_id).map_err(|e| e.to_string())
 }
 
 pub fn check_provider_limits(
@@ -856,12 +856,12 @@ pub fn update_tray_menu(_ctx: &CoreContext) -> Result<bool, String> {
 
 /// 获取应用设置
 pub fn get_settings() -> AppSettings {
-    cc_switch::get_settings()
+    cli_memory::get_settings()
 }
 
 /// 保存应用设置
 pub fn save_settings(settings: AppSettings) -> Result<bool, String> {
-    cc_switch::update_settings(settings).map_err(|e| e.to_string())?;
+    cli_memory::update_settings(settings).map_err(|e| e.to_string())?;
     Ok(true)
 }
 
@@ -933,42 +933,42 @@ pub fn set_log_config(ctx: &CoreContext, config: LogConfig) -> Result<bool, Stri
 
 /// 获取 Claude Code 配置状态
 pub fn get_claude_config_status() -> ConfigStatus {
-    cc_switch::get_claude_config_status_sync()
+    cli_memory::get_claude_config_status_sync()
 }
 
 /// 获取指定应用配置状态
 pub fn get_config_status(app: &str) -> Result<ConfigStatus, String> {
     let app_type = AppType::from_str(app).map_err(|e| e.to_string())?;
     let status = match app_type {
-        AppType::Claude => cc_switch::get_claude_config_status_sync(),
+        AppType::Claude => cli_memory::get_claude_config_status_sync(),
         AppType::Codex => {
-            let auth_path = cc_switch::get_codex_auth_path();
+            let auth_path = cli_memory::get_codex_auth_path();
             ConfigStatus {
                 exists: auth_path.exists(),
-                path: cc_switch::get_codex_config_dir()
+                path: cli_memory::get_codex_config_dir()
                     .to_string_lossy()
                     .to_string(),
             }
         }
         AppType::Gemini => {
-            let env_path = cc_switch::get_gemini_env_path();
+            let env_path = cli_memory::get_gemini_env_path();
             ConfigStatus {
                 exists: env_path.exists(),
-                path: cc_switch::get_gemini_dir().to_string_lossy().to_string(),
+                path: cli_memory::get_gemini_dir().to_string_lossy().to_string(),
             }
         }
         AppType::OpenCode => {
-            let config_path = cc_switch::get_opencode_config_path();
+            let config_path = cli_memory::get_opencode_config_path();
             ConfigStatus {
                 exists: config_path.exists(),
-                path: cc_switch::get_opencode_dir().to_string_lossy().to_string(),
+                path: cli_memory::get_opencode_dir().to_string_lossy().to_string(),
             }
         }
         AppType::OpenClaw => {
-            let config_path = cc_switch::get_openclaw_config_path();
+            let config_path = cli_memory::get_openclaw_config_path();
             ConfigStatus {
                 exists: config_path.exists(),
-                path: cc_switch::get_openclaw_dir().to_string_lossy().to_string(),
+                path: cli_memory::get_openclaw_dir().to_string_lossy().to_string(),
             }
         }
     };
@@ -987,17 +987,17 @@ pub fn restart_app() -> Result<bool, String> {
 pub fn get_config_dir(app: &str) -> Result<String, String> {
     let app_type = AppType::from_str(app).map_err(|e| e.to_string())?;
     let dir = match app_type {
-        AppType::Claude => cc_switch::get_claude_config_dir(),
-        AppType::Codex => cc_switch::get_codex_config_dir(),
-        AppType::Gemini => cc_switch::get_gemini_dir(),
-        AppType::OpenCode => cc_switch::get_opencode_dir(),
-        AppType::OpenClaw => cc_switch::get_openclaw_dir(),
+        AppType::Claude => cli_memory::get_claude_config_dir(),
+        AppType::Codex => cli_memory::get_codex_config_dir(),
+        AppType::Gemini => cli_memory::get_gemini_dir(),
+        AppType::OpenCode => cli_memory::get_opencode_dir(),
+        AppType::OpenClaw => cli_memory::get_openclaw_dir(),
     };
     Ok(dir.to_string_lossy().to_string())
 }
 
 fn get_home_dir() -> PathBuf {
-    if let Ok(home) = std::env::var("CC_SWITCH_TEST_HOME") {
+    if let Ok(home) = std::env::var("CLI_MEMORY_TEST_HOME") {
         let trimmed = home.trim();
         if !trimmed.is_empty() {
             return PathBuf::from(trimmed);
@@ -1034,27 +1034,27 @@ pub fn pick_directory() -> Result<Option<String>, String> {
 
 /// 获取 Claude Code 配置文件路径
 pub fn get_claude_code_config_path() -> String {
-    cc_switch::get_claude_settings_path()
+    cli_memory::get_claude_settings_path()
         .to_string_lossy()
         .to_string()
 }
 
 /// 获取应用配置文件路径
 pub fn get_app_config_path() -> String {
-    cc_switch::get_app_config_path()
+    cli_memory::get_app_config_path()
         .to_string_lossy()
         .to_string()
 }
 
 /// 获取应用配置目录路径
 pub fn get_app_config_dir() -> String {
-    cc_switch::get_app_config_dir()
+    cli_memory::get_app_config_dir()
         .to_string_lossy()
         .to_string()
 }
 
 pub fn get_default_app_config_dir() -> String {
-    get_home_dir().join(".cc-switch").to_string_lossy().to_string()
+    get_home_dir().join(".cli-memory").to_string_lossy().to_string()
 }
 
 /// 打开应用配置文件夹 (stub - not applicable for web server)
@@ -1066,7 +1066,7 @@ pub fn open_app_config_folder() -> Result<String, String> {
 /// 获取 app_config_dir 覆盖配置
 /// In web mode, we read from environment variable or return None
 pub fn get_app_config_dir_override() -> Option<String> {
-    std::env::var("CC_SWITCH_CONFIG_DIR").ok()
+    std::env::var("CLI_MEMORY_CONFIG_DIR").ok()
 }
 
 /// 设置 app_config_dir 覆盖配置 (stub - not fully applicable for web server)
@@ -1080,9 +1080,9 @@ pub fn set_app_config_dir_override(_path: Option<&str>) -> Result<bool, String> 
 /// 应用 Claude 插件配置
 pub fn apply_claude_plugin_config(official: bool) -> Result<bool, String> {
     if official {
-        cc_switch::clear_claude_config().map_err(|e| e.to_string())
+        cli_memory::clear_claude_config().map_err(|e| e.to_string())
     } else {
-        cc_switch::write_claude_config().map_err(|e| e.to_string())
+        cli_memory::write_claude_config().map_err(|e| e.to_string())
     }
 }
 
@@ -1171,7 +1171,7 @@ pub fn create_db_backup(ctx: &CoreContext) -> Result<String, String> {
 
 /// 列出数据库备份
 pub fn list_db_backups() -> Result<Vec<BackupEntry>, String> {
-    cc_switch::Database::list_backups().map_err(|e| e.to_string())
+    cli_memory::Database::list_backups().map_err(|e| e.to_string())
 }
 
 /// 恢复数据库备份
@@ -1184,16 +1184,16 @@ pub fn restore_db_backup(ctx: &CoreContext, filename: &str) -> Result<String, St
 
 /// 重命名数据库备份
 pub fn rename_db_backup(old_filename: &str, new_name: &str) -> Result<String, String> {
-    cc_switch::Database::rename_backup(old_filename, new_name).map_err(|e| e.to_string())
+    cli_memory::Database::rename_backup(old_filename, new_name).map_err(|e| e.to_string())
 }
 
 /// 删除数据库备份
 pub fn delete_db_backup(filename: &str) -> Result<(), String> {
-    cc_switch::Database::delete_backup(filename).map_err(|e| e.to_string())
+    cli_memory::Database::delete_backup(filename).map_err(|e| e.to_string())
 }
 
 fn webdav_not_configured_error() -> String {
-    cc_switch::AppError::localized(
+    cli_memory::AppError::localized(
         "webdav.sync.not_configured",
         "未配置 WebDAV 同步",
         "WebDAV sync is not configured.",
@@ -1202,7 +1202,7 @@ fn webdav_not_configured_error() -> String {
 }
 
 fn webdav_sync_disabled_error() -> String {
-    cc_switch::AppError::localized(
+    cli_memory::AppError::localized(
         "webdav.sync.disabled",
         "WebDAV 同步未启用",
         "WebDAV sync is disabled.",
@@ -1211,7 +1211,7 @@ fn webdav_sync_disabled_error() -> String {
 }
 
 fn require_enabled_webdav_settings() -> Result<WebDavSyncSettings, String> {
-    let settings = cc_switch::get_webdav_sync_settings().ok_or_else(webdav_not_configured_error)?;
+    let settings = cli_memory::get_webdav_sync_settings().ok_or_else(webdav_not_configured_error)?;
     if !settings.enabled {
         return Err(webdav_sync_disabled_error());
     }
@@ -1233,16 +1233,16 @@ fn resolve_password_for_request(
 
 fn persist_sync_error(
     settings: &mut WebDavSyncSettings,
-    error: &cc_switch::AppError,
+    error: &cli_memory::AppError,
     source: &str,
 ) {
     settings.status.last_error = Some(error.to_string());
     settings.status.last_error_source = Some(source.to_string());
-    let _ = cc_switch::update_webdav_sync_status(settings.status.clone());
+    let _ = cli_memory::update_webdav_sync_status(settings.status.clone());
 }
 
 fn post_sync_warning(err: impl std::fmt::Display) -> String {
-    cc_switch::AppError::localized(
+    cli_memory::AppError::localized(
         "sync.post_operation_sync_failed",
         format!("后置同步状态失败: {err}"),
         format!("Post-operation synchronization failed: {err}"),
@@ -1267,10 +1267,10 @@ pub async fn webdav_test_connection(
     let preserve_empty = preserve_empty_password.unwrap_or(true);
     let resolved = resolve_password_for_request(
         settings,
-        cc_switch::get_webdav_sync_settings(),
+        cli_memory::get_webdav_sync_settings(),
         preserve_empty,
     );
-    cc_switch::webdav_check_connection(&resolved)
+    cli_memory::webdav_check_connection(&resolved)
         .await
         .map_err(|e| e.to_string())?;
     Ok(serde_json::json!({
@@ -1285,7 +1285,7 @@ pub async fn webdav_sync_upload(ctx: &CoreContext) -> Result<serde_json::Value, 
     let mut settings = require_enabled_webdav_settings()?;
 
     let result =
-        cc_switch::webdav_run_with_sync_lock(cc_switch::webdav_upload(&db, &mut settings)).await;
+        cli_memory::webdav_run_with_sync_lock(cli_memory::webdav_upload(&db, &mut settings)).await;
     match result {
         Ok(value) => Ok(value),
         Err(err) => {
@@ -1301,7 +1301,7 @@ pub async fn webdav_sync_download(ctx: &CoreContext) -> Result<serde_json::Value
     let mut settings = require_enabled_webdav_settings()?;
 
     let result =
-        cc_switch::webdav_run_with_sync_lock(cc_switch::webdav_download(&db, &mut settings)).await;
+        cli_memory::webdav_run_with_sync_lock(cli_memory::webdav_download(&db, &mut settings)).await;
     let mut value = match result {
         Ok(value) => value,
         Err(err) => {
@@ -1311,7 +1311,7 @@ pub async fn webdav_sync_download(ctx: &CoreContext) -> Result<serde_json::Value
     };
 
     let warning = match ProviderService::sync_current_to_live(ctx.app_state()) {
-        Ok(()) => match cc_switch::reload_settings() {
+        Ok(()) => match cli_memory::reload_settings() {
             Ok(()) => None,
             Err(err) => Some(post_sync_warning(err)),
         },
@@ -1330,7 +1330,7 @@ pub fn webdav_sync_save_settings(
     password_touched: Option<bool>,
 ) -> Result<serde_json::Value, String> {
     let password_touched = password_touched.unwrap_or(false);
-    let existing = cc_switch::get_webdav_sync_settings();
+    let existing = cli_memory::get_webdav_sync_settings();
     let mut sync_settings =
         resolve_password_for_request(settings, existing.clone(), !password_touched);
 
@@ -1340,14 +1340,14 @@ pub fn webdav_sync_save_settings(
 
     sync_settings.normalize();
     sync_settings.validate().map_err(|e| e.to_string())?;
-    cc_switch::set_webdav_sync_settings(Some(sync_settings)).map_err(|e| e.to_string())?;
+    cli_memory::set_webdav_sync_settings(Some(sync_settings)).map_err(|e| e.to_string())?;
     Ok(serde_json::json!({ "success": true }))
 }
 
 /// 获取 WebDAV 远端信息
 pub async fn webdav_sync_fetch_remote_info() -> Result<serde_json::Value, String> {
     let settings = require_enabled_webdav_settings()?;
-    let info = cc_switch::webdav_fetch_remote_info(&settings)
+    let info = cli_memory::webdav_fetch_remote_info(&settings)
         .await
         .map_err(|e| e.to_string())?;
     Ok(info.unwrap_or_else(|| serde_json::json!({ "empty": true })))
@@ -1446,7 +1446,7 @@ fn ceil_char_boundary(s: &str, mut i: usize) -> usize {
 }
 
 fn workspace_root() -> std::path::PathBuf {
-    cc_switch::get_openclaw_dir().join("workspace")
+    cli_memory::get_openclaw_dir().join("workspace")
 }
 
 fn memory_root() -> std::path::PathBuf {
@@ -1472,7 +1472,7 @@ pub fn write_workspace_file(filename: &str, content: &str) -> Result<(), String>
     std::fs::create_dir_all(&root)
         .map_err(|e| format!("Failed to create workspace directory: {e}"))?;
     let path = root.join(filename);
-    cc_switch::write_text_file(&path, content).map_err(|e| e.to_string())
+    cli_memory::write_text_file(&path, content).map_err(|e| e.to_string())
 }
 
 /// 列出 daily memory 文件
@@ -1545,7 +1545,7 @@ pub fn write_daily_memory_file(filename: &str, content: &str) -> Result<(), Stri
     std::fs::create_dir_all(&root)
         .map_err(|e| format!("Failed to create memory directory: {e}"))?;
     let path = root.join(filename);
-    cc_switch::write_text_file(&path, content).map_err(|e| e.to_string())
+    cli_memory::write_text_file(&path, content).map_err(|e| e.to_string())
 }
 
 /// 删除 daily memory 文件
@@ -1772,9 +1772,9 @@ pub fn import_skills_from_apps(
 ) -> Result<serde_json::Value, String> {
     let imports = directories
         .into_iter()
-        .map(|directory| cc_switch::ImportSkillSelection {
+        .map(|directory| cli_memory::ImportSkillSelection {
             directory,
-            apps: cc_switch::SkillApps::default(),
+            apps: cli_memory::SkillApps::default(),
         })
         .collect();
     let installed = SkillService::import_from_apps(&ctx.app_state().db, imports)
@@ -1911,13 +1911,23 @@ pub async fn get_tool_versions(
     tools: Option<Vec<String>>,
     wsl_shell_by_tool: Option<HashMap<String, WslShellPreferenceInput>>,
 ) -> Result<serde_json::Value, String> {
-    let versions = cc_switch::get_tool_versions(tools, wsl_shell_by_tool).await?;
+    let versions = cli_memory::get_tool_versions(tools, wsl_shell_by_tool).await?;
     serde_json::to_value(versions).map_err(|e| e.to_string())
 }
 
 /// 获取会话列表
 pub async fn list_sessions() -> Result<serde_json::Value, String> {
-    let sessions = cc_switch::list_sessions().await?;
+    let sessions = cli_memory::list_sessions().await?;
+    serde_json::to_value(sessions).map_err(|e| e.to_string())
+}
+
+/// 搜索会话列表，包含完整 transcript 内容
+pub async fn search_sessions(
+    query: &str,
+    provider_id: Option<&str>,
+) -> Result<serde_json::Value, String> {
+    let sessions =
+        cli_memory::search_sessions(query.to_string(), provider_id.map(str::to_string)).await?;
     serde_json::to_value(sessions).map_err(|e| e.to_string())
 }
 
@@ -1927,7 +1937,7 @@ pub async fn get_session_messages(
     source_path: &str,
 ) -> Result<serde_json::Value, String> {
     let messages =
-        cc_switch::get_session_messages(provider_id.to_string(), source_path.to_string()).await?;
+        cli_memory::get_session_messages(provider_id.to_string(), source_path.to_string()).await?;
     serde_json::to_value(messages).map_err(|e| e.to_string())
 }
 
@@ -1948,7 +1958,7 @@ pub async fn delete_session(
     session_id: &str,
     source_path: &str,
 ) -> Result<bool, String> {
-    cc_switch::delete_session(
+    cli_memory::delete_session(
         provider_id.to_string(),
         session_id.to_string(),
         source_path.to_string(),
@@ -1958,27 +1968,27 @@ pub async fn delete_session(
 
 /// 获取 Claude 插件配置状态
 pub async fn get_claude_plugin_status() -> Result<ConfigStatus, String> {
-    cc_switch::get_claude_plugin_status().await
+    cli_memory::get_claude_plugin_status().await
 }
 
 /// 读取 Claude 插件配置
 pub async fn read_claude_plugin_config() -> Result<Option<String>, String> {
-    cc_switch::read_claude_plugin_config().await
+    cli_memory::read_claude_plugin_config().await
 }
 
 /// Claude 插件是否已应用
 pub async fn is_claude_plugin_applied() -> Result<bool, String> {
-    cc_switch::is_claude_plugin_applied().await
+    cli_memory::is_claude_plugin_applied().await
 }
 
 /// 跳过 Claude onboarding
 pub async fn apply_claude_onboarding_skip() -> Result<bool, String> {
-    cc_switch::apply_claude_onboarding_skip().await
+    cli_memory::apply_claude_onboarding_skip().await
 }
 
 /// 清除 Claude onboarding 跳过状态
 pub async fn clear_claude_onboarding_skip() -> Result<bool, String> {
-    cc_switch::clear_claude_onboarding_skip().await
+    cli_memory::clear_claude_onboarding_skip().await
 }
 
 /// 获取 Claude 官方认证状态
@@ -2025,45 +2035,45 @@ pub fn remove_provider_from_live_config(
 /// 从各应用导入 MCP
 pub fn import_mcp_from_apps(ctx: &CoreContext) -> Result<usize, String> {
     let mut total = 0;
-    total += cc_switch::McpService::import_from_claude(ctx.app_state()).unwrap_or(0);
-    total += cc_switch::McpService::import_from_codex(ctx.app_state()).unwrap_or(0);
-    total += cc_switch::McpService::import_from_gemini(ctx.app_state()).unwrap_or(0);
-    total += cc_switch::McpService::import_from_opencode(ctx.app_state()).unwrap_or(0);
+    total += cli_memory::McpService::import_from_claude(ctx.app_state()).unwrap_or(0);
+    total += cli_memory::McpService::import_from_codex(ctx.app_state()).unwrap_or(0);
+    total += cli_memory::McpService::import_from_gemini(ctx.app_state()).unwrap_or(0);
+    total += cli_memory::McpService::import_from_opencode(ctx.app_state()).unwrap_or(0);
     Ok(total)
 }
 
 /// 从 deep link 导入 provider（兼容旧 API）
 pub fn import_from_deeplink(
     ctx: &CoreContext,
-    request: cc_switch::DeepLinkImportRequest,
+    request: cli_memory::DeepLinkImportRequest,
 ) -> Result<String, String> {
-    cc_switch::import_provider_from_deeplink(ctx.app_state(), request).map_err(|e| e.to_string())
+    cli_memory::import_provider_from_deeplink(ctx.app_state(), request).map_err(|e| e.to_string())
 }
 
 /// 导入 OpenClaw live providers
 pub fn import_openclaw_providers_from_live(ctx: &CoreContext) -> Result<usize, String> {
-    cc_switch::import_openclaw_providers_from_live(ctx.app_state()).map_err(|e| e.to_string())
+    cli_memory::import_openclaw_providers_from_live(ctx.app_state()).map_err(|e| e.to_string())
 }
 
 /// 获取 OpenClaw live provider IDs
 pub fn get_openclaw_live_provider_ids() -> Result<Vec<String>, String> {
-    cc_switch::get_openclaw_live_provider_ids().map_err(|e| e.to_string())
+    cli_memory::get_openclaw_live_provider_ids().map_err(|e| e.to_string())
 }
 
 /// 获取单个 OpenClaw live provider
 pub fn get_openclaw_live_provider(provider_id: &str) -> Result<Option<serde_json::Value>, String> {
-    cc_switch::get_openclaw_live_provider(provider_id.to_string()).map_err(|e| e.to_string())
+    cli_memory::get_openclaw_live_provider(provider_id.to_string()).map_err(|e| e.to_string())
 }
 
 /// 扫描 OpenClaw 配置健康状态
 pub fn scan_openclaw_config_health() -> Result<serde_json::Value, String> {
-    let warnings = cc_switch::scan_openclaw_config_health().map_err(|e| e.to_string())?;
+    let warnings = cli_memory::scan_openclaw_config_health().map_err(|e| e.to_string())?;
     serde_json::to_value(warnings).map_err(|e| e.to_string())
 }
 
 /// 获取 OpenClaw 默认模型
 pub fn get_openclaw_default_model() -> Result<serde_json::Value, String> {
-    let model = cc_switch::get_openclaw_default_model().map_err(|e| e.to_string())?;
+    let model = cli_memory::get_openclaw_default_model().map_err(|e| e.to_string())?;
     serde_json::to_value(model).map_err(|e| e.to_string())
 }
 
@@ -2071,13 +2081,13 @@ pub fn get_openclaw_default_model() -> Result<serde_json::Value, String> {
 pub fn set_openclaw_default_model(
     model: OpenClawDefaultModel,
 ) -> Result<serde_json::Value, String> {
-    let outcome = cc_switch::set_openclaw_default_model(model).map_err(|e| e.to_string())?;
+    let outcome = cli_memory::set_openclaw_default_model(model).map_err(|e| e.to_string())?;
     serde_json::to_value(outcome).map_err(|e| e.to_string())
 }
 
 /// 获取 OpenClaw 模型目录
 pub fn get_openclaw_model_catalog() -> Result<serde_json::Value, String> {
-    let catalog = cc_switch::get_openclaw_model_catalog().map_err(|e| e.to_string())?;
+    let catalog = cli_memory::get_openclaw_model_catalog().map_err(|e| e.to_string())?;
     serde_json::to_value(catalog).map_err(|e| e.to_string())
 }
 
@@ -2085,13 +2095,13 @@ pub fn get_openclaw_model_catalog() -> Result<serde_json::Value, String> {
 pub fn set_openclaw_model_catalog(
     catalog: HashMap<String, OpenClawModelCatalogEntry>,
 ) -> Result<serde_json::Value, String> {
-    let outcome = cc_switch::set_openclaw_model_catalog(catalog).map_err(|e| e.to_string())?;
+    let outcome = cli_memory::set_openclaw_model_catalog(catalog).map_err(|e| e.to_string())?;
     serde_json::to_value(outcome).map_err(|e| e.to_string())
 }
 
 /// 获取 OpenClaw agents defaults
 pub fn get_openclaw_agents_defaults() -> Result<serde_json::Value, String> {
-    let defaults = cc_switch::get_openclaw_agents_defaults().map_err(|e| e.to_string())?;
+    let defaults = cli_memory::get_openclaw_agents_defaults().map_err(|e| e.to_string())?;
     serde_json::to_value(defaults).map_err(|e| e.to_string())
 }
 
@@ -2099,31 +2109,31 @@ pub fn get_openclaw_agents_defaults() -> Result<serde_json::Value, String> {
 pub fn set_openclaw_agents_defaults(
     defaults: OpenClawAgentsDefaults,
 ) -> Result<serde_json::Value, String> {
-    let outcome = cc_switch::set_openclaw_agents_defaults(defaults).map_err(|e| e.to_string())?;
+    let outcome = cli_memory::set_openclaw_agents_defaults(defaults).map_err(|e| e.to_string())?;
     serde_json::to_value(outcome).map_err(|e| e.to_string())
 }
 
 /// 获取 OpenClaw env 配置
 pub fn get_openclaw_env() -> Result<serde_json::Value, String> {
-    let env = cc_switch::get_openclaw_env().map_err(|e| e.to_string())?;
+    let env = cli_memory::get_openclaw_env().map_err(|e| e.to_string())?;
     serde_json::to_value(env).map_err(|e| e.to_string())
 }
 
 /// 设置 OpenClaw env 配置
 pub fn set_openclaw_env(env: OpenClawEnvConfig) -> Result<serde_json::Value, String> {
-    let outcome = cc_switch::set_openclaw_env(env).map_err(|e| e.to_string())?;
+    let outcome = cli_memory::set_openclaw_env(env).map_err(|e| e.to_string())?;
     serde_json::to_value(outcome).map_err(|e| e.to_string())
 }
 
 /// 获取 OpenClaw tools 配置
 pub fn get_openclaw_tools() -> Result<serde_json::Value, String> {
-    let tools = cc_switch::get_openclaw_tools().map_err(|e| e.to_string())?;
+    let tools = cli_memory::get_openclaw_tools().map_err(|e| e.to_string())?;
     serde_json::to_value(tools).map_err(|e| e.to_string())
 }
 
 /// 设置 OpenClaw tools 配置
 pub fn set_openclaw_tools(tools: OpenClawToolsConfig) -> Result<serde_json::Value, String> {
-    let outcome = cc_switch::set_openclaw_tools(tools).map_err(|e| e.to_string())?;
+    let outcome = cli_memory::set_openclaw_tools(tools).map_err(|e| e.to_string())?;
     serde_json::to_value(outcome).map_err(|e| e.to_string())
 }
 
@@ -2139,29 +2149,29 @@ pub fn get_global_proxy_url(ctx: &CoreContext) -> Result<Option<String>, String>
 pub fn set_global_proxy_url(ctx: &CoreContext, url: &str) -> Result<(), String> {
     let trimmed = url.trim();
     let url_opt = (!trimmed.is_empty()).then_some(trimmed);
-    cc_switch::validate_global_proxy(url_opt).map_err(|e| e.to_string())?;
+    cli_memory::validate_global_proxy(url_opt).map_err(|e| e.to_string())?;
     ctx.app_state()
         .db
         .set_global_proxy_url(url_opt)
         .map_err(|e| e.to_string())?;
-    cc_switch::apply_global_proxy(url_opt).map_err(|e| e.to_string())
+    cli_memory::apply_global_proxy(url_opt).map_err(|e| e.to_string())
 }
 
 /// 测试全局代理 URL
 pub async fn test_proxy_url(url: &str) -> Result<serde_json::Value, String> {
-    let result = cc_switch::test_proxy_url(url.to_string()).await?;
+    let result = cli_memory::test_proxy_url(url.to_string()).await?;
     serde_json::to_value(result).map_err(|e| e.to_string())
 }
 
 /// 获取当前上游代理状态
 pub fn get_upstream_proxy_status() -> Result<serde_json::Value, String> {
-    let status = cc_switch::get_upstream_proxy_status();
+    let status = cli_memory::get_upstream_proxy_status();
     serde_json::to_value(status).map_err(|e| e.to_string())
 }
 
 /// 扫描本地代理
 pub async fn scan_local_proxies() -> Result<serde_json::Value, String> {
-    let proxies = cc_switch::scan_local_proxies().await;
+    let proxies = cli_memory::scan_local_proxies().await;
     serde_json::to_value(proxies).map_err(|e| e.to_string())
 }
 
@@ -2172,7 +2182,7 @@ pub fn set_window_theme(_theme: &str) -> Result<(), String> {
 
 /// 读取 OMO 本地文件
 pub async fn read_omo_local_file() -> Result<serde_json::Value, String> {
-    let data = cc_switch::read_omo_local_file().await?;
+    let data = cli_memory::read_omo_local_file().await?;
     serde_json::to_value(data).map_err(|e| e.to_string())
 }
 
@@ -2201,12 +2211,12 @@ pub fn disable_current_omo(ctx: &CoreContext) -> Result<(), String> {
                 .map_err(|e| e.to_string())?;
         }
     }
-    cc_switch::OmoService::delete_config_file(&cc_switch::OMO_STANDARD).map_err(|e| e.to_string())
+    cli_memory::OmoService::delete_config_file(&cli_memory::OMO_STANDARD).map_err(|e| e.to_string())
 }
 
 /// 读取 OMO Slim 本地文件
 pub async fn read_omo_slim_local_file() -> Result<serde_json::Value, String> {
-    let data = cc_switch::read_omo_slim_local_file().await?;
+    let data = cli_memory::read_omo_slim_local_file().await?;
     serde_json::to_value(data).map_err(|e| e.to_string())
 }
 
@@ -2235,17 +2245,17 @@ pub fn disable_current_omo_slim(ctx: &CoreContext) -> Result<(), String> {
                 .map_err(|e| e.to_string())?;
         }
     }
-    cc_switch::OmoService::delete_config_file(&cc_switch::OMO_SLIM).map_err(|e| e.to_string())
+    cli_memory::OmoService::delete_config_file(&cli_memory::OMO_SLIM).map_err(|e| e.to_string())
 }
 
 /// 导入 OpenCode live providers
 pub fn import_opencode_providers_from_live(ctx: &CoreContext) -> Result<usize, String> {
-    cc_switch::import_opencode_providers_from_live(ctx.app_state()).map_err(|e| e.to_string())
+    cli_memory::import_opencode_providers_from_live(ctx.app_state()).map_err(|e| e.to_string())
 }
 
 /// 获取 OpenCode live provider IDs
 pub fn get_opencode_live_provider_ids() -> Result<Vec<String>, String> {
-    cc_switch::get_opencode_live_provider_ids().map_err(|e| e.to_string())
+    cli_memory::get_opencode_live_provider_ids().map_err(|e| e.to_string())
 }
 
 /// 打开 provider terminal（web 不支持）
@@ -2262,31 +2272,31 @@ pub async fn open_provider_terminal(
 // ========================
 
 /// MCP 状态信息
-pub use cc_switch::McpStatus;
+pub use cli_memory::McpStatus;
 
 /// 获取 Claude MCP 状态
 pub fn get_claude_mcp_status() -> Result<McpStatus, String> {
-    cc_switch::get_claude_mcp_status_raw().map_err(|e| e.to_string())
+    cli_memory::get_claude_mcp_status_raw().map_err(|e| e.to_string())
 }
 
 /// 读取 Claude MCP 配置文件内容
 pub fn read_claude_mcp_config() -> Result<Option<String>, String> {
-    cc_switch::read_claude_mcp_config_raw().map_err(|e| e.to_string())
+    cli_memory::read_claude_mcp_config_raw().map_err(|e| e.to_string())
 }
 
 /// 在 Claude MCP 配置中添加或更新服务器
 pub fn upsert_claude_mcp_server(id: &str, spec: serde_json::Value) -> Result<bool, String> {
-    cc_switch::upsert_claude_mcp_server_raw(id, spec).map_err(|e| e.to_string())
+    cli_memory::upsert_claude_mcp_server_raw(id, spec).map_err(|e| e.to_string())
 }
 
 /// 在 Claude MCP 配置中删除服务器
 pub fn delete_claude_mcp_server(id: &str) -> Result<bool, String> {
-    cc_switch::delete_claude_mcp_server_raw(id).map_err(|e| e.to_string())
+    cli_memory::delete_claude_mcp_server_raw(id).map_err(|e| e.to_string())
 }
 
 /// 校验命令是否在 PATH 中可用
 pub fn validate_mcp_command(cmd: &str) -> Result<bool, String> {
-    cc_switch::validate_mcp_command_raw(cmd).map_err(|e| e.to_string())
+    cli_memory::validate_mcp_command_raw(cmd).map_err(|e| e.to_string())
 }
 
 /// MCP 配置响应（用于兼容旧 API）
@@ -2299,12 +2309,12 @@ pub struct McpConfigResponse {
 /// 获取 MCP 配置（来自 ~/.cli-memory/config.json）
 #[allow(deprecated)]
 pub fn get_mcp_config(ctx: &CoreContext, app: &str) -> Result<McpConfigResponse, String> {
-    let config_path = cc_switch::get_app_config_path()
+    let config_path = cli_memory::get_app_config_path()
         .to_string_lossy()
         .to_string();
     let app_ty = AppType::from_str(app).map_err(|e| e.to_string())?;
     let servers =
-        cc_switch::McpService::get_servers(ctx.app_state(), app_ty).map_err(|e| e.to_string())?;
+        cli_memory::McpService::get_servers(ctx.app_state(), app_ty).map_err(|e| e.to_string())?;
     Ok(McpConfigResponse {
         config_path,
         servers,
@@ -2319,7 +2329,7 @@ pub fn upsert_mcp_server_in_config(
     spec: serde_json::Value,
     sync_other_side: Option<bool>,
 ) -> Result<bool, String> {
-    use cc_switch::McpApps;
+    use cli_memory::McpApps;
 
     let app_ty = AppType::from_str(app).map_err(|e| e.to_string())?;
 
@@ -2370,14 +2380,14 @@ pub fn upsert_mcp_server_in_config(
         new_server.apps.gemini = true;
     }
 
-    cc_switch::McpService::upsert_server(ctx.app_state(), new_server)
+    cli_memory::McpService::upsert_server(ctx.app_state(), new_server)
         .map(|_| true)
         .map_err(|e| e.to_string())
 }
 
 /// 在 config.json 中删除一个 MCP 服务器定义
 pub fn delete_mcp_server_in_config(ctx: &CoreContext, id: &str) -> Result<bool, String> {
-    cc_switch::McpService::delete_server(ctx.app_state(), id).map_err(|e| e.to_string())
+    cli_memory::McpService::delete_server(ctx.app_state(), id).map_err(|e| e.to_string())
 }
 
 /// 设置启用状态并同步到客户端配置
@@ -2389,23 +2399,23 @@ pub fn set_mcp_enabled(
     enabled: bool,
 ) -> Result<bool, String> {
     let app_ty = AppType::from_str(app).map_err(|e| e.to_string())?;
-    cc_switch::McpService::set_enabled(ctx.app_state(), app_ty, id, enabled)
+    cli_memory::McpService::set_enabled(ctx.app_state(), app_ty, id, enabled)
         .map_err(|e| e.to_string())
 }
 
 /// 获取所有 MCP 服务器（统一结构）
 pub fn get_mcp_servers(ctx: &CoreContext) -> Result<IndexMap<String, McpServer>, String> {
-    cc_switch::McpService::get_all_servers(ctx.app_state()).map_err(|e| e.to_string())
+    cli_memory::McpService::get_all_servers(ctx.app_state()).map_err(|e| e.to_string())
 }
 
 /// 添加或更新 MCP 服务器（统一结构）
 pub fn upsert_mcp_server(ctx: &CoreContext, server: McpServer) -> Result<(), String> {
-    cc_switch::McpService::upsert_server(ctx.app_state(), server).map_err(|e| e.to_string())
+    cli_memory::McpService::upsert_server(ctx.app_state(), server).map_err(|e| e.to_string())
 }
 
 /// 删除 MCP 服务器
 pub fn delete_mcp_server(ctx: &CoreContext, id: &str) -> Result<bool, String> {
-    cc_switch::McpService::delete_server(ctx.app_state(), id).map_err(|e| e.to_string())
+    cli_memory::McpService::delete_server(ctx.app_state(), id).map_err(|e| e.to_string())
 }
 
 /// 切换 MCP 服务器在指定应用的启用状态
@@ -2416,7 +2426,7 @@ pub fn toggle_mcp_app(
     enabled: bool,
 ) -> Result<(), String> {
     let app_ty = AppType::from_str(app).map_err(|e| e.to_string())?;
-    cc_switch::McpService::toggle_app(ctx.app_state(), server_id, app_ty, enabled)
+    cli_memory::McpService::toggle_app(ctx.app_state(), server_id, app_ty, enabled)
         .map_err(|e| e.to_string())
 }
 
@@ -2425,15 +2435,15 @@ pub fn toggle_mcp_app(
 // ========================
 
 /// 导出 Prompt 类型
-pub use cc_switch::Prompt;
+pub use cli_memory::Prompt;
 
 /// 获取所有提示词
 pub fn get_prompts(
     ctx: &CoreContext,
     app: &str,
-) -> Result<IndexMap<String, cc_switch::Prompt>, String> {
+) -> Result<IndexMap<String, cli_memory::Prompt>, String> {
     let app_type = AppType::from_str(app).map_err(|e| e.to_string())?;
-    cc_switch::PromptService::get_prompts(ctx.app_state(), app_type).map_err(|e| e.to_string())
+    cli_memory::PromptService::get_prompts(ctx.app_state(), app_type).map_err(|e| e.to_string())
 }
 
 /// 添加或更新提示词
@@ -2441,37 +2451,37 @@ pub fn upsert_prompt(
     ctx: &CoreContext,
     app: &str,
     id: &str,
-    prompt: cc_switch::Prompt,
+    prompt: cli_memory::Prompt,
 ) -> Result<(), String> {
     let app_type = AppType::from_str(app).map_err(|e| e.to_string())?;
-    cc_switch::PromptService::upsert_prompt(ctx.app_state(), app_type, id, prompt)
+    cli_memory::PromptService::upsert_prompt(ctx.app_state(), app_type, id, prompt)
         .map_err(|e| e.to_string())
 }
 
 /// 删除提示词
 pub fn delete_prompt(ctx: &CoreContext, app: &str, id: &str) -> Result<(), String> {
     let app_type = AppType::from_str(app).map_err(|e| e.to_string())?;
-    cc_switch::PromptService::delete_prompt(ctx.app_state(), app_type, id)
+    cli_memory::PromptService::delete_prompt(ctx.app_state(), app_type, id)
         .map_err(|e| e.to_string())
 }
 
 /// 启用提示词
 pub fn enable_prompt(ctx: &CoreContext, app: &str, id: &str) -> Result<(), String> {
     let app_type = AppType::from_str(app).map_err(|e| e.to_string())?;
-    cc_switch::PromptService::enable_prompt(ctx.app_state(), app_type, id)
+    cli_memory::PromptService::enable_prompt(ctx.app_state(), app_type, id)
         .map_err(|e| e.to_string())
 }
 
 /// 从文件导入提示词
 pub fn import_prompt_from_file(ctx: &CoreContext, app: &str) -> Result<String, String> {
     let app_type = AppType::from_str(app).map_err(|e| e.to_string())?;
-    cc_switch::PromptService::import_from_file(ctx.app_state(), app_type).map_err(|e| e.to_string())
+    cli_memory::PromptService::import_from_file(ctx.app_state(), app_type).map_err(|e| e.to_string())
 }
 
 /// 获取当前提示词文件内容
 pub fn get_current_prompt_file_content(app: &str) -> Result<Option<String>, String> {
     let app_type = AppType::from_str(app).map_err(|e| e.to_string())?;
-    cc_switch::PromptService::get_current_file_content(app_type).map_err(|e| e.to_string())
+    cli_memory::PromptService::get_current_file_content(app_type).map_err(|e| e.to_string())
 }
 
 // ========================
@@ -2479,23 +2489,23 @@ pub fn get_current_prompt_file_content(app: &str) -> Result<Option<String>, Stri
 // ========================
 
 /// 导出环境变量相关类型
-pub use cc_switch::{BackupInfo, EnvConflict};
+pub use cli_memory::{BackupInfo, EnvConflict};
 
 /// 检查环境变量冲突
-pub fn check_env_conflicts(app: &str) -> Result<Vec<cc_switch::EnvConflict>, String> {
-    cc_switch::check_env_conflicts(app)
+pub fn check_env_conflicts(app: &str) -> Result<Vec<cli_memory::EnvConflict>, String> {
+    cli_memory::check_env_conflicts(app)
 }
 
 /// 删除环境变量（带备份）
 pub fn delete_env_vars(
-    conflicts: Vec<cc_switch::EnvConflict>,
-) -> Result<cc_switch::BackupInfo, String> {
-    cc_switch::delete_env_vars(conflicts)
+    conflicts: Vec<cli_memory::EnvConflict>,
+) -> Result<cli_memory::BackupInfo, String> {
+    cli_memory::delete_env_vars(conflicts)
 }
 
 /// 从备份恢复环境变量
 pub fn restore_env_backup(backup_path: &str) -> Result<(), String> {
-    cc_switch::restore_from_backup(backup_path.to_string())
+    cli_memory::restore_from_backup(backup_path.to_string())
 }
 
 // ========================
@@ -2579,28 +2589,28 @@ pub fn set_common_config_snippet(
 // ========================
 
 /// 导出 DeepLinkImportRequest 类型
-pub use cc_switch::DeepLinkImportRequest;
+pub use cli_memory::DeepLinkImportRequest;
 
 /// 解析深链接 URL
-pub fn parse_deeplink(url: &str) -> Result<cc_switch::DeepLinkImportRequest, String> {
-    cc_switch::parse_deeplink_url(url).map_err(|e| e.to_string())
+pub fn parse_deeplink(url: &str) -> Result<cli_memory::DeepLinkImportRequest, String> {
+    cli_memory::parse_deeplink_url(url).map_err(|e| e.to_string())
 }
 
 /// 合并深链接配置（从 Base64/URL 解析并填充完整配置）
 pub fn merge_deeplink_config(
-    request: cc_switch::DeepLinkImportRequest,
-) -> Result<cc_switch::DeepLinkImportRequest, String> {
-    cc_switch::parse_and_merge_config(&request).map_err(|e| e.to_string())
+    request: cli_memory::DeepLinkImportRequest,
+) -> Result<cli_memory::DeepLinkImportRequest, String> {
+    cli_memory::parse_and_merge_config(&request).map_err(|e| e.to_string())
 }
 
 /// 统一导入深链接资源
 pub fn import_from_deeplink_unified(
     ctx: &CoreContext,
-    request: cc_switch::DeepLinkImportRequest,
+    request: cli_memory::DeepLinkImportRequest,
 ) -> Result<serde_json::Value, String> {
     match request.resource.as_str() {
         "provider" => {
-            let provider_id = cc_switch::import_provider_from_deeplink(ctx.app_state(), request)
+            let provider_id = cli_memory::import_provider_from_deeplink(ctx.app_state(), request)
                 .map_err(|e| e.to_string())?;
             Ok(serde_json::json!({
                 "type": "provider",
@@ -2608,7 +2618,7 @@ pub fn import_from_deeplink_unified(
             }))
         }
         "prompt" => {
-            let prompt_id = cc_switch::import_prompt_from_deeplink(ctx.app_state(), request)
+            let prompt_id = cli_memory::import_prompt_from_deeplink(ctx.app_state(), request)
                 .map_err(|e| e.to_string())?;
             Ok(serde_json::json!({
                 "type": "prompt",
@@ -2616,7 +2626,7 @@ pub fn import_from_deeplink_unified(
             }))
         }
         "mcp" => {
-            let result = cc_switch::import_mcp_from_deeplink(ctx.app_state(), request)
+            let result = cli_memory::import_mcp_from_deeplink(ctx.app_state(), request)
                 .map_err(|e| e.to_string())?;
             Ok(serde_json::json!({
                 "type": "mcp",
@@ -2626,7 +2636,7 @@ pub fn import_from_deeplink_unified(
             }))
         }
         "skill" => {
-            let skill_key = cc_switch::import_skill_from_deeplink(ctx.app_state(), request)
+            let skill_key = cli_memory::import_skill_from_deeplink(ctx.app_state(), request)
                 .map_err(|e| e.to_string())?;
             Ok(serde_json::json!({
                 "type": "skill",

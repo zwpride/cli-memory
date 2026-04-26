@@ -34,6 +34,17 @@ describe("sessionsApi", () => {
     });
   });
 
+  it("routes search through the shared transport layer", async () => {
+    invokeMock.mockResolvedValueOnce([]);
+
+    await sessionsApi.search("deploy regression", "codex");
+
+    expect(invokeMock).toHaveBeenCalledWith("search_sessions", {
+      query: "deploy regression",
+      providerId: "codex",
+    });
+  });
+
   it("routes delete through the shared transport layer", async () => {
     invokeMock.mockResolvedValueOnce(true);
 

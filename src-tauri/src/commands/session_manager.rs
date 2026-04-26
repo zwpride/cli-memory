@@ -11,6 +11,18 @@ pub async fn list_sessions() -> Result<Vec<session_manager::SessionMeta>, String
 }
 
 #[cfg_attr(feature = "desktop", tauri::command)]
+pub async fn search_sessions(
+    query: String,
+    providerId: Option<String>,
+) -> Result<Vec<session_manager::SessionMeta>, String> {
+    tokio::task::spawn_blocking(move || {
+        session_manager::search_sessions(&query, providerId.as_deref())
+    })
+    .await
+    .map_err(|e| format!("Failed to search sessions: {e}"))
+}
+
+#[cfg_attr(feature = "desktop", tauri::command)]
 pub async fn get_session_messages(
     providerId: String,
     sourcePath: String,

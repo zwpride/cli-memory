@@ -82,7 +82,7 @@ impl Default for SessionStore {
 /// Returns None if file is missing or invalid (auth disabled)
 pub fn load_auth_config() -> Option<AuthConfig> {
     let home = dirs::home_dir()?;
-    let config_path = home.join(".cc-switch").join("web-auth.json");
+    let config_path = home.join(".cli-memory").join("web-auth.json");
 
     let content = fs::read_to_string(&config_path).ok()?;
     let config: AuthConfig = serde_json::from_str(&content).ok()?;

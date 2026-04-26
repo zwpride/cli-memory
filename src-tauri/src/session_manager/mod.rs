@@ -25,6 +25,8 @@ pub struct SessionMeta {
     pub source_path: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub resume_command: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub session_kind: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -124,6 +126,25 @@ pub fn load_messages(provider_id: &str, source_path: &str) -> Result<Vec<Session
     }
 }
 
+pub fn search_sessions(query: &str, provider_filter: Option<&str>) -> Vec<SessionMeta> {
+    let normalized_provider = normalize_provider_filter(provider_filter);
+    let terms = normalize_query_terms(query);
+
+    let mut sessions: Vec<_> = scan_sessions()
+        .into_iter()
+        .filter(|session| provider_matches(session, normalized_provider.as_deref()))
+        .filter(|session| session_matches_search(session, &terms))
+        .collect();
+
+    sessions.sort_by(|a, b| {
+        let a_ts = a.last_active_at.or(a.created_at).unwrap_or(0);
+        let b_ts = b.last_active_at.or(b.created_at).unwrap_or(0);
+        b_ts.cmp(&a_ts)
+    });
+
+    sessions
+}
+
 pub fn delete_session(
     provider_id: &str,
     session_id: &str,
@@ -185,6 +206,96 @@ fn provider_root(provider_id: &str) -> Result<PathBuf, String> {
     };
 
     Ok(root)
+}
+
+fn normalize_provider_filter(provider_filter: Option<&str>) -> Option<String> {
+    provider_filter
+        .map(str::trim)
+        .filter(|value| !value.is_empty() && *value != "all")
+        .map(|value| value.to_ascii_lowercase())
+}
+
+fn provider_matches(session: &SessionMeta, provider_filter: Option<&str>) -> bool {
+    provider_filter
+        .map(|provider| session.provider_id.eq_ignore_ascii_case(provider))
+        .unwrap_or(true)
+}
+
+fn normalize_query_terms(query: &str) -> Vec<String> {
+    query
+        .trim()
+        .to_ascii_lowercase()
+        .split_whitespace()
+        .map(str::to_string)
+        .collect()
+}
+
+fn metadata_search_text(session: &SessionMeta) -> String {
+    [
+        Some(session.provider_id.as_str()),
+        Some(session.session_id.as_str()),
+        session.title.as_deref(),
+        session.summary.as_deref(),
+        session.project_dir.as_deref(),
+        session.source_path.as_deref(),
+        session.resume_command.as_deref(),
+        session.session_kind.as_deref(),
+    ]
+    .into_iter()
+    .flatten()
+    .collect::<Vec<_>>()
+    .join(" ")
+    .to_ascii_lowercase()
+}
+
+fn messages_search_text(messages: &[SessionMessage]) -> String {
+    let mut parts = Vec::new();
+    for message in messages {
+        parts.push(message.role.as_str());
+        parts.push(message.content.as_str());
+        if let Some(thinking) = message.thinking.as_deref() {
+            parts.push(thinking);
+        }
+        if let Some(tool_call_id) = message.tool_call_id.as_deref() {
+            parts.push(tool_call_id);
+        }
+        if let Some(tool_calls) = message.tool_calls.as_ref() {
+            for tool_call in tool_calls {
+                if let Some(id) = tool_call.id.as_deref() {
+                    parts.push(id);
+                }
+                if let Some(name) = tool_call.name.as_deref() {
+                    parts.push(name);
+                }
+                if let Some(arguments) = tool_call.arguments.as_deref() {
+                    parts.push(arguments);
+                }
+            }
+        }
+    }
+    parts.join(" ").to_ascii_lowercase()
+}
+
+fn contains_all_terms(haystack: &str, terms: &[String]) -> bool {
+    terms.iter().all(|term| haystack.contains(term))
+}
+
+fn session_matches_search(session: &SessionMeta, terms: &[String]) -> bool {
+    if terms.is_empty() {
+        return true;
+    }
+
+    if contains_all_terms(&metadata_search_text(session), terms) {
+        return true;
+    }
+
+    let Some(source_path) = session.source_path.as_deref() else {
+        return false;
+    };
+
+    load_messages(&session.provider_id, source_path)
+        .map(|messages| contains_all_terms(&messages_search_text(&messages), terms))
+        .unwrap_or(false)
 }
 
 fn canonicalize_existing_path(path: &Path, label: &str) -> Result<PathBuf, String> {
@@ -298,5 +409,49 @@ mod tests {
             outcomes[2].error.as_deref(),
             Some("Session was not deleted")
         );
+    }
+
+    #[test]
+    fn metadata_search_text_includes_session_kind() {
+        let session = SessionMeta {
+            provider_id: "claude".to_string(),
+            session_id: "session-1".to_string(),
+            title: Some("Agent task".to_string()),
+            summary: None,
+            project_dir: Some("/tmp/project".to_string()),
+            created_at: None,
+            last_active_at: None,
+            source_path: Some("/tmp/project/agent-1.jsonl".to_string()),
+            resume_command: None,
+            session_kind: Some("agent".to_string()),
+        };
+
+        let text = metadata_search_text(&session);
+
+        assert!(text.contains("agent"));
+        assert!(contains_all_terms(&text, &normalize_query_terms("claude agent")));
+    }
+
+    #[test]
+    fn messages_search_text_includes_thinking_and_tool_arguments() {
+        let messages = vec![SessionMessage {
+            role: "assistant".to_string(),
+            content: "I will inspect the file.".to_string(),
+            ts: None,
+            thinking: Some("Need to verify deploy regression".to_string()),
+            tool_calls: Some(vec![ToolCall {
+                id: Some("toolu_1".to_string()),
+                name: Some("Read".to_string()),
+                arguments: Some("{\"file_path\":\"src/main.rs\"}".to_string()),
+            }]),
+            tool_call_id: None,
+        }];
+
+        let text = messages_search_text(&messages);
+
+        assert!(contains_all_terms(
+            &text,
+            &normalize_query_terms("deploy regression src/main.rs read")
+        ));
     }
 }

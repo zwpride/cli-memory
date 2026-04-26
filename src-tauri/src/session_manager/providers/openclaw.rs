@@ -238,6 +238,7 @@ fn parse_session(path: &Path) -> Option<SessionMeta> {
         last_active_at,
         source_path: Some(path.to_string_lossy().to_string()),
         resume_command: None, // OpenClaw sessions are gateway-managed, no CLI resume
+        session_kind: None,
     })
 }
 

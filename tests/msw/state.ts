@@ -102,7 +102,7 @@ const createDefaultSessions = (): SessionMeta[] => {
       createdAt: now - 2000,
       lastActiveAt: now - 1000,
       sourcePath: "/mock/codex/session-1.jsonl",
-      resumeCommand: "codex resume codex-session-1",
+      resumeCommand: "codex --yolo resume codex-session-1",
     },
     {
       providerId: "claude",
@@ -113,7 +113,8 @@ const createDefaultSessions = (): SessionMeta[] => {
       createdAt: now - 4000,
       lastActiveAt: now - 3000,
       sourcePath: "/mock/claude/session-1.jsonl",
-      resumeCommand: "claude --resume claude-session-1",
+      resumeCommand:
+        "IS_SANDBOX=1 claude --dangerously-skip-permissions --resume claude-session-1",
     },
   ];
 };
@@ -379,6 +380,76 @@ export const deleteMcpServer = (appType: AppId, id: string) => {
 
 export const listSessions = () =>
   JSON.parse(JSON.stringify(sessionsState)) as SessionMeta[];
+
+const sortSessionsByActivity = (sessions: SessionMeta[]) =>
+  [...sessions].sort((left, right) => {
+    const leftTimestamp = left.lastActiveAt ?? left.createdAt ?? 0;
+    const rightTimestamp = right.lastActiveAt ?? right.createdAt ?? 0;
+    return rightTimestamp - leftTimestamp;
+  });
+
+const normalizeSearchTerms = (query: string) =>
+  query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+
+const metadataSearchText = (session: SessionMeta) =>
+  [
+    session.providerId,
+    session.sessionId,
+    session.title,
+    session.summary,
+    session.projectDir,
+    session.sourcePath,
+    session.resumeCommand,
+    session.sessionKind,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+const messageSearchText = (messages: SessionMessage[]) =>
+  messages
+    .flatMap((message) => [
+      message.role,
+      message.content,
+      message.thinking,
+      message.toolCallId,
+      ...(message.toolCalls ?? []).flatMap((toolCall) => [
+        toolCall.id,
+        toolCall.name,
+        toolCall.arguments,
+      ]),
+    ])
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+const includesAllTerms = (haystack: string, terms: string[]) =>
+  terms.every((term) => haystack.includes(term));
+
+export const searchSessions = (query: string, providerId?: string) => {
+  const terms = normalizeSearchTerms(query);
+  const providerFilter = providerId === "all" ? undefined : providerId;
+  const filtered = sessionsState.filter(
+    (session) => !providerFilter || session.providerId === providerFilter,
+  );
+
+  if (terms.length === 0) {
+    return JSON.parse(JSON.stringify(sortSessionsByActivity(filtered))) as SessionMeta[];
+  }
+
+  const matches = filtered.filter((session) => {
+    if (includesAllTerms(metadataSearchText(session), terms)) {
+      return true;
+    }
+
+    const messages =
+      sessionMessagesState[sessionMessageKey(session.providerId, session.sourcePath ?? "")] ??
+      [];
+    return includesAllTerms(messageSearchText(messages), terms);
+  });
+
+  return JSON.parse(JSON.stringify(sortSessionsByActivity(matches))) as SessionMeta[];
+};
 
 export const getSessionMessages = (providerId: string, sourcePath: string) =>
   JSON.parse(

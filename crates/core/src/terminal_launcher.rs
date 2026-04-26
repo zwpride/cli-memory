@@ -41,7 +41,7 @@ fn build_cd_line(cwd: Option<&str>) -> String {
 
 fn write_command_script(command: &str, cwd: Option<&str>) -> Result<PathBuf, String> {
     let script_path = std::env::temp_dir().join(format!(
-        "cc_switch_terminal_command_{}.sh",
+        "cli_memory_terminal_command_{}.sh",
         unique_suffix()
     ));
     let content = format!(
@@ -72,9 +72,9 @@ fn write_handoff_bridge(command: &str, initial_input: &str, cwd: Option<&str>) -
 
     let suffix = unique_suffix();
     let temp_dir = std::env::temp_dir();
-    let spec_path = temp_dir.join(format!("cc_switch_handoff_spec_{suffix}.json"));
-    let bridge_path = temp_dir.join(format!("cc_switch_handoff_bridge_{suffix}.py"));
-    let wrapper_path = temp_dir.join(format!("cc_switch_handoff_wrapper_{suffix}.sh"));
+    let spec_path = temp_dir.join(format!("cli_memory_handoff_spec_{suffix}.json"));
+    let bridge_path = temp_dir.join(format!("cli_memory_handoff_bridge_{suffix}.py"));
+    let wrapper_path = temp_dir.join(format!("cli_memory_handoff_wrapper_{suffix}.sh"));
 
     let spec = serde_json::to_string(&HandoffSpec {
         command,
@@ -191,7 +191,7 @@ exec bash --norc --noprofile
 
 #[cfg(target_os = "linux")]
 fn launch_linux_terminal(command_line: &str, custom_config: Option<&str>) -> Result<(), String> {
-    let preferred = cc_switch::get_settings().preferred_terminal;
+    let preferred = cli_memory::get_settings().preferred_terminal;
     let default_terminals = [
         ("gnome-terminal", vec!["--"]),
         ("konsole", vec!["-e"]),

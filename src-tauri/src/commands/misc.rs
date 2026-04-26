@@ -2,6 +2,8 @@
 
 use crate::app_config::AppType;
 use crate::init_status::InitErrorPayload;
+#[cfg(feature = "desktop")]
+use crate::services::ProviderService;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::HashMap;
@@ -223,7 +225,7 @@ async fn fetch_github_latest_version(client: &reqwest::Client, repo: &str) -> Op
     let url = format!("https://api.github.com/repos/{repo}/releases/latest");
     match client
         .get(&url)
-        .header("User-Agent", "cc-switch")
+        .header("User-Agent", "cli-memory")
         .header("Accept", "application/vnd.github+json")
         .send()
         .await
@@ -887,7 +889,7 @@ fn launch_macos_terminal(config_file: &std::path::Path, cwd: Option<&Path>) -> R
     let terminal = preferred.as_deref().unwrap_or("terminal");
 
     let temp_dir = std::env::temp_dir();
-    let script_file = temp_dir.join(format!("cc_switch_launcher_{}.sh", std::process::id()));
+    let script_file = temp_dir.join(format!("cli_memory_launcher_{}.sh", std::process::id()));
     let config_path = config_file.to_string_lossy();
     let cd_command = build_shell_cd_command(cwd);
 
@@ -1061,7 +1063,7 @@ fn launch_linux_terminal(config_file: &std::path::Path, cwd: Option<&Path>) -> R
 
     // Create temp script file
     let temp_dir = std::env::temp_dir();
-    let script_file = temp_dir.join(format!("cc_switch_launcher_{}.sh", std::process::id()));
+    let script_file = temp_dir.join(format!("cli_memory_launcher_{}.sh", std::process::id()));
     let config_path = config_file.to_string_lossy();
     let cd_command = build_shell_cd_command(cwd);
 
@@ -1161,7 +1163,7 @@ fn launch_windows_terminal(
     let preferred = crate::settings::get_preferred_terminal();
     let terminal = preferred.as_deref().unwrap_or("cmd");
 
-    let bat_file = temp_dir.join(format!("cc_switch_claude_{}.bat", std::process::id()));
+    let bat_file = temp_dir.join(format!("cli_memory_claude_{}.bat", std::process::id()));
     let config_path_for_batch = escape_windows_batch_value(&config_file.to_string_lossy());
     let cwd_command = build_windows_cwd_command(cwd);
 
@@ -1449,7 +1451,7 @@ mod tests {
             .duration_since(std::time::UNIX_EPOCH)
             .expect("clock should be after epoch")
             .as_nanos();
-        let missing = std::env::temp_dir().join(format!("cc-switch-missing-{unique}"));
+        let missing = std::env::temp_dir().join(format!("cli-memory-missing-{unique}"));
 
         let error = resolve_launch_cwd(Some(missing.to_string_lossy().into_owned()))
             .expect_err("missing directory should fail");

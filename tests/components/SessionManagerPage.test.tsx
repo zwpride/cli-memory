@@ -81,6 +81,26 @@ const renderPage = () => {
   };
 };
 
+const renderPageInWheelWrapper = (onWheel: () => void) => {
+  const client = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+  return {
+    client,
+    ...render(
+      <QueryClientProvider client={client}>
+        <div onWheel={onWheel}>
+          <SessionManagerPage appId="codex" />
+        </div>
+      </QueryClientProvider>,
+    ),
+  };
+};
+
 /** Wait for session list to load, then click the given session to open its dialog */
 async function openSession(name: string) {
   await waitFor(() =>
@@ -110,12 +130,12 @@ describe("SessionManagerPage", () => {
         providerId: "codex",
         sessionId: "codex-session-1",
         title: "Alpha Session",
-        summary: "Alpha summary",
-        projectDir: "/mock/codex",
+        summary: "Alpha summary with detailed deployment context",
+        projectDir: "/volume/pt-coder/users/wzhang/coder/swe",
         createdAt: 2,
         lastActiveAt: 20,
         sourcePath: "/mock/codex/session-1.jsonl",
-        resumeCommand: "codex resume codex-session-1",
+        resumeCommand: "codex --yolo resume codex-session-1",
       },
       {
         providerId: "codex",
@@ -126,12 +146,12 @@ describe("SessionManagerPage", () => {
         createdAt: 1,
         lastActiveAt: 10,
         sourcePath: "/mock/codex/session-2.jsonl",
-        resumeCommand: "codex resume codex-session-2",
+        resumeCommand: "codex --yolo resume codex-session-2",
       },
     ];
     const messages: Record<string, SessionMessage[]> = {
       "codex:/mock/codex/session-1.jsonl": [
-        { role: "user", content: "alpha", ts: 20 },
+        { role: "user", content: "alpha deploy regression", ts: 20 },
       ],
       "codex:/mock/codex/session-2.jsonl": [
         { role: "user", content: "beta", ts: 10 },
@@ -139,6 +159,178 @@ describe("SessionManagerPage", () => {
     };
 
     setSessionFixtures(sessions, messages);
+  });
+
+  it("shows session ids in the list", async () => {
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.getByText("codex-session-1")).toBeInTheDocument(),
+    );
+    expect(screen.getByText("codex-session-2")).toBeInTheDocument();
+  });
+
+  it("shows expanded session metadata in the list", async () => {
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.getByText("Alpha Session")).toBeInTheDocument(),
+    );
+
+    expect(
+      screen.getByText("Alpha summary with detailed deployment context"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("/volume/pt-coder/users/wzhang/coder/swe"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("codex --yolo resume codex-session-1"),
+    ).toBeInTheDocument();
+  });
+
+  it("copies expanded list metadata without opening the detail dialog", async () => {
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.getByText("Alpha Session")).toBeInTheDocument(),
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: /复制目录/i })[0]);
+
+    await waitFor(() =>
+      expect(clipboardWriteTextMock).toHaveBeenCalledWith(
+        "/volume/pt-coder/users/wzhang/coder/swe",
+      ),
+    );
+    expect(screen.queryByTestId("session-dialog")).not.toBeInTheDocument();
+  });
+
+  it("shows and copies the visible resume command from the detail dialog", async () => {
+    renderPage();
+    await openSession("Alpha Session");
+
+    const sessionDialog = screen.getByTestId("session-dialog");
+    expect(
+      within(sessionDialog).getByText("codex --yolo resume codex-session-1"),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      within(sessionDialog).getByRole("button", { name: /复制恢复命令/i }),
+    );
+
+    await waitFor(() =>
+      expect(clipboardWriteTextMock).toHaveBeenCalledWith(
+        "codex --yolo resume codex-session-1",
+      ),
+    );
+  });
+
+  it("shows and copies the visible project directory from the detail dialog", async () => {
+    renderPage();
+    await openSession("Alpha Session");
+
+    const sessionDialog = screen.getByTestId("session-dialog");
+    expect(
+      within(sessionDialog).getByText(
+        "/volume/pt-coder/users/wzhang/coder/swe",
+      ),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      within(sessionDialog).getByRole("button", { name: /复制目录/i }),
+    );
+
+    await waitFor(() =>
+      expect(clipboardWriteTextMock).toHaveBeenCalledWith(
+        "/volume/pt-coder/users/wzhang/coder/swe",
+      ),
+    );
+  });
+
+  it("shows the session summary in the detail dialog", async () => {
+    renderPage();
+    await openSession("Alpha Session");
+
+    expect(
+      within(screen.getByTestId("session-dialog")).getByText(
+        "Alpha summary with detailed deployment context",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("searches expanded metadata fields and highlights all query terms", async () => {
+    const { container } = renderPage();
+
+    await waitFor(() =>
+      expect(screen.getByText("Alpha Session")).toBeInTheDocument(),
+    );
+
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "coder swe" },
+    });
+
+    await waitFor(() =>
+      expect(screen.getByText("Alpha Session")).toBeInTheDocument(),
+    );
+    expect(screen.queryByText("Beta Session")).not.toBeInTheDocument();
+    expect(
+      Array.from(container.querySelectorAll("mark")).map(
+        (node) => node.textContent,
+      ),
+    ).toEqual(expect.arrayContaining(["coder", "swe"]));
+  });
+
+  it("searches sessions by full transcript content", async () => {
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.getByText("Alpha Session")).toBeInTheDocument(),
+    );
+
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "deploy regression" },
+    });
+
+    await waitFor(() =>
+      expect(screen.getByText("Alpha Session")).toBeInTheDocument(),
+    );
+    expect(screen.queryByText("Beta Session")).not.toBeInTheDocument();
+  });
+
+  it("does not swallow wheel events from the session list", async () => {
+    const onWheel = vi.fn();
+    renderPageInWheelWrapper(onWheel);
+
+    await waitFor(() =>
+      expect(screen.getByText("Alpha Session")).toBeInTheDocument(),
+    );
+
+    fireEvent.wheel(screen.getByText("Alpha Session"));
+
+    expect(onWheel).toHaveBeenCalled();
+  });
+
+  it("clears the session search input", async () => {
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.getByText("Alpha Session")).toBeInTheDocument(),
+    );
+
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "Alpha" },
+    });
+
+    await waitFor(() =>
+      expect(screen.queryByText("Beta Session")).not.toBeInTheDocument(),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /清除/i }));
+
+    await waitFor(() =>
+      expect(screen.getByText("Beta Session")).toBeInTheDocument(),
+    );
+    expect(screen.getByRole("textbox")).toHaveValue("");
   });
 
   it("deletes the selected session via the detail dialog", async () => {
@@ -303,7 +495,8 @@ describe("SessionManagerPage", () => {
         createdAt: 2,
         lastActiveAt: 20,
         sourcePath: "/mock/claude/session-1.jsonl",
-        resumeCommand: "claude resume claude-session-1",
+        resumeCommand:
+          "IS_SANDBOX=1 claude --dangerously-skip-permissions --resume claude-session-1",
       },
       {
         providerId: "codex",
@@ -314,7 +507,7 @@ describe("SessionManagerPage", () => {
         createdAt: 1,
         lastActiveAt: 10,
         sourcePath: "/mock/codex/session-1.jsonl",
-        resumeCommand: "codex resume codex-session-1",
+        resumeCommand: "codex --yolo resume codex-session-1",
       },
     ];
     const messages: Record<string, SessionMessage[]> = {
@@ -369,7 +562,7 @@ describe("SessionManagerPage", () => {
         createdAt: 1,
         lastActiveAt: 100,
         sourcePath: "/mock/codex/long-session.jsonl",
-        resumeCommand: "codex resume codex-session-long",
+        resumeCommand: "codex --yolo resume codex-session-long",
       },
     ];
     const longMessages = Array.from({ length: 220 }, (_, index) => ({

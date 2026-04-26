@@ -58,6 +58,19 @@ export const getProviderIconName = (providerId: string) => {
   return providerId;
 };
 
+export const getSessionKindLabel = (
+  sessionKind: SessionMeta["sessionKind"],
+  t: (key: string, options?: Record<string, unknown>) => string,
+) => {
+  if (sessionKind === "agent") {
+    return t("sessionManager.agentSession", { defaultValue: "Agent" });
+  }
+  if (sessionKind === "subagent") {
+    return t("sessionManager.subagentSession", { defaultValue: "Subagent" });
+  }
+  return "";
+};
+
 export const getRoleTone = (role: string) => {
   const normalized = role.toLowerCase();
   if (normalized === "assistant") return "text-blue-500";
@@ -86,11 +99,16 @@ export const formatSessionTitle = (session: SessionMeta) => {
 
 export const highlightText = (text: string, query: string): ReactNode => {
   if (!query) return text;
-  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const parts = text.split(new RegExp(`(${escaped})`, "gi"));
+  const terms = Array.from(
+    new Set(query.trim().split(/\s+/).filter(Boolean)),
+  ).sort((left, right) => right.length - left.length);
+  if (terms.length === 0) return text;
+  const escaped = terms.map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const parts = text.split(new RegExp(`(${escaped.join("|")})`, "gi"));
   if (parts.length === 1) return text;
+  const normalizedTerms = new Set(terms.map((term) => term.toLowerCase()));
   return parts.map((part, i) =>
-    i % 2 === 1
+    normalizedTerms.has(part.toLowerCase())
       ? createElement(
           "mark",
           {

@@ -1,11 +1,4 @@
-import {
-  startTransition,
-  useDeferredValue,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useSessionSearch } from "@/hooks/useSessionSearch";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -19,6 +12,7 @@ import {
   MessageSquare,
   Clock,
   FolderOpen,
+  Terminal,
   X,
   CheckSquare,
   List,
@@ -56,9 +50,10 @@ import { SessionMessageItem } from "./SessionMessageItem";
 import {
   formatSessionTitle,
   formatTimestamp,
-  getBaseName,
   getProviderIconName,
+  getSessionKindLabel,
   getSessionKey,
+  highlightText,
 } from "./utils";
 
 /** Convert session messages to SFT training JSONL format */
@@ -207,12 +202,12 @@ export function SessionManagerPage({ appId }: { appId: string }) {
     setSelectedSessionKeys(new Set());
   }, [appId]);
 
-  const { filteredSessions } = useSessionSearch({
+  const { filteredSessions, isSearching } = useSessionSearch({
     sessions,
     providerFilter,
     query: deferredSearch,
   });
-  const isFiltering = search !== deferredSearch;
+  const isFiltering = search !== deferredSearch || isSearching;
 
   const hasExplicitSessionFilter = search.trim().length > 0;
 
@@ -330,6 +325,7 @@ export function SessionManagerPage({ appId }: { appId: string }) {
         sessionId: target.sessionId,
         sourcePath: target.sourcePath!,
       });
+      await queryClient.invalidateQueries({ queryKey: ["sessionSearch"] });
       setSelectedSessionKeys((current) => {
         const next = new Set(current);
         next.delete(getSessionKey(target));
@@ -383,6 +379,7 @@ export function SessionManagerPage({ appId }: { appId: string }) {
       });
 
       await queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      await queryClient.invalidateQueries({ queryKey: ["sessionSearch"] });
 
       if (deletedKeys.length > 0) {
         toast.success(
@@ -432,6 +429,10 @@ export function SessionManagerPage({ appId }: { appId: string }) {
   const selectedDeletableSessions = useMemo(
     () => selectedSessions.filter((session) => Boolean(session.sourcePath)),
     [selectedSessions],
+  );
+  const selectedSessionKindLabel = getSessionKindLabel(
+    selectedSession?.sessionKind,
+    t,
   );
 
   useEffect(() => {
@@ -505,10 +506,7 @@ export function SessionManagerPage({ appId }: { appId: string }) {
 
   return (
     <TooltipProvider>
-      <div
-        className="flex flex-col min-h-0 gap-4"
-        onWheel={(e) => e.stopPropagation()}
-      >
+      <div className="flex flex-col min-h-0 gap-4">
           <div className="sticky top-0 z-20">
             <div className="app-panel bg-white/82 px-4 py-4 shadow-sm dark:border-white/[0.08] dark:bg-slate-950/72">
               <div className="space-y-3">
@@ -541,10 +539,7 @@ export function SessionManagerPage({ appId }: { appId: string }) {
                     <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       value={search}
-                      onChange={(event) => {
-                        const value = event.target.value;
-                        startTransition(() => setSearch(value));
-                      }}
+                      onChange={(event) => setSearch(event.target.value)}
                       placeholder={t("sessionManager.searchPlaceholder")}
                       className="h-10 rounded-lg border-black/[0.08] bg-white/72 pl-9 pr-9 text-sm shadow-sm dark:border-white/[0.08] dark:bg-white/[0.05]"
                       aria-label={t("sessionManager.searchSessions", {
@@ -557,7 +552,7 @@ export function SessionManagerPage({ appId }: { appId: string }) {
                         variant="ghost"
                         size="icon"
                         className="absolute right-1 top-1/2 size-7 -translate-y-1/2 rounded-xl"
-                        onClick={() => startTransition(() => setSearch(""))}
+                        onClick={() => setSearch("")}
                         aria-label={t("common.clear", {
                           defaultValue: "清除",
                         })}
@@ -573,7 +568,12 @@ export function SessionManagerPage({ appId }: { appId: string }) {
                     size="sm"
                     className="h-10 rounded-lg px-3"
                     onClick={() => {
-                      void refetch();
+                      void Promise.all([
+                        refetch(),
+                        queryClient.invalidateQueries({
+                          queryKey: ["sessionSearch"],
+                        }),
+                      ]);
                     }}
                   >
                     <RefreshCw className="mr-2 size-3.5" />
@@ -772,6 +772,7 @@ export function SessionManagerPage({ appId }: { appId: string }) {
                             onToggleChecked={(checked) =>
                               toggleSessionChecked(session, checked)
                             }
+                            onCopy={handleCopy}
                           />
                         );
                       })}
@@ -795,84 +796,155 @@ export function SessionManagerPage({ appId }: { appId: string }) {
             >
               {selectedSession && (
                 <>
-                  {/* 紧凑头部 */}
-                  <div className="flex items-center justify-between gap-3 px-5 py-2.5 border-b border-border-default bg-muted/20 shrink-0">
-                    {/* 左：标题 + 元信息 */}
-                    <div className="min-w-0 flex-1 flex items-center gap-3">
+                  <div className="grid gap-4 border-b border-border-default bg-muted/20 px-5 py-4 shrink-0 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+                    <div className="min-w-0 flex items-start gap-3">
                       <ProviderIcon
                         icon={getProviderIconName(selectedSession.providerId)}
                         name={selectedSession.providerId}
                         size={22}
                       />
-                      <div className="min-w-0">
-                        <DialogTitle className="text-sm font-semibold truncate">
-                          {formatSessionTitle(selectedSession)}
-                        </DialogTitle>
-                        <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-0.5">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                          <DialogTitle className="min-w-0 break-words text-base font-semibold">
+                            {formatSessionTitle(selectedSession)}
+                          </DialogTitle>
+                          {selectedSessionKindLabel && (
+                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-200/80 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+                              {selectedSessionKindLabel}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Clock className="size-3" />
                             {formatTimestamp(
                               selectedSession.lastActiveAt ?? selectedSession.createdAt,
                             )}
                           </span>
-                          {selectedSession.projectDir && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    void handleCopy(
-                                      selectedSession.projectDir!,
-                                      t("sessionManager.projectDirCopied"),
-                                    )
-                                  }
-                                  className="flex items-center gap-1 hover:text-foreground transition-colors truncate max-w-[160px]"
-                                >
-                                  <FolderOpen className="size-3 shrink-0" />
-                                  {getBaseName(selectedSession.projectDir)}
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent side="bottom" className="max-w-xs">
-                                <p className="font-mono text-xs break-all">
-                                  {selectedSession.projectDir}
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
                           <span>{messages.length} {t("sessionManager.messagesCount", { defaultValue: "条消息" })}</span>
                         </div>
-                      </div>
-                    </div>
+                        {selectedSession.summary?.trim() && (
+                          <div className="mt-3 rounded-md border border-black/[0.08] bg-white/72 px-2.5 py-2 dark:border-white/10 dark:bg-white/[0.05]">
+                            <div className="mb-1 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                              {t("sessionManager.summaryLabel", {
+                                defaultValue: "摘要",
+                              })}
+                            </div>
+                            <p className="break-words text-[11px] leading-5 text-foreground/85">
+                              {deferredSearch
+                                ? highlightText(
+                                    selectedSession.summary ?? "",
+                                    deferredSearch,
+                                  )
+                                : selectedSession.summary}
+                            </p>
+                          </div>
+                        )}
 
-                    {/* 右：操作 + 关闭 */}
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {selectedSession.resumeCommand && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
+                        <div className="mt-3 grid gap-2">
+                          <div className="grid gap-1.5 rounded-md border border-black/[0.08] bg-white/72 px-2.5 py-2 dark:border-white/10 dark:bg-white/[0.05] min-[760px]:grid-cols-[96px_minmax(0,1fr)_auto] min-[760px]:items-start">
+                            <span className="pt-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                              Session ID
+                            </span>
+                            <code className="min-w-0 break-all font-mono text-[11px] leading-5 text-foreground/85">
+                              {selectedSession.sessionId}
+                            </code>
                             <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-8"
+                              variant="outline"
+                              size="sm"
+                              className="h-7 justify-self-start rounded-lg px-2 text-[11px] min-[760px]:justify-self-end"
+                              aria-label={t("sessionManager.copySessionId", {
+                                defaultValue: "复制 Session ID",
+                              })}
                               onClick={() =>
                                 void handleCopy(
-                                  selectedSession.resumeCommand!,
-                                  t("sessionManager.resumeCommandCopied", {
-                                    defaultValue: "已复制恢复命令",
+                                  selectedSession.sessionId,
+                                  t("sessionManager.sessionIdCopied", {
+                                    defaultValue: "Session ID 已复制",
                                   }),
                                 )
                               }
                             >
                               <Copy className="size-3.5" />
+                              {t("common.copy", { defaultValue: "复制" })}
                             </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="font-mono text-xs">{selectedSession.resumeCommand}</p>
-                            <p className="text-muted-foreground text-[11px] mt-0.5">
-                              {t("sessionManager.clickToCopyCommand", { defaultValue: "点击复制恢复命令" })}
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
+                          </div>
+
+                        {selectedSession.projectDir && (
+                          <div className="grid gap-1.5 rounded-md border border-black/[0.08] bg-white/72 px-2.5 py-2 dark:border-white/10 dark:bg-white/[0.05] min-[760px]:grid-cols-[96px_minmax(0,1fr)_auto] min-[760px]:items-start">
+                            <span className="flex items-center gap-1.5 pt-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                              <FolderOpen className="size-3.5" />
+                              {t("sessionManager.projectDir", {
+                                defaultValue: "项目目录",
+                              })}
+                            </span>
+                              <code
+                              className="min-w-0 break-all font-mono text-[11px] leading-5 text-foreground/85"
+                                title={selectedSession.projectDir}
+                              >
+                                {selectedSession.projectDir}
+                              </code>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                              className="h-7 justify-self-start rounded-lg px-2 text-[11px] min-[760px]:justify-self-end"
+                                aria-label={t("sessionManager.copyProjectDir", {
+                                  defaultValue: "复制目录",
+                                })}
+                                onClick={() =>
+                                  void handleCopy(
+                                    selectedSession.projectDir!,
+                                    t("sessionManager.projectDirCopied", {
+                                      defaultValue: "目录已复制",
+                                    }),
+                                  )
+                                }
+                              >
+                                <Copy className="size-3.5" />
+                                {t("common.copy", { defaultValue: "复制" })}
+                              </Button>
+                          </div>
+                        )}
+                        {selectedSession.resumeCommand && (
+                          <div className="grid gap-1.5 rounded-md border border-black/[0.08] bg-white/72 px-2.5 py-2 dark:border-white/10 dark:bg-white/[0.05] min-[760px]:grid-cols-[96px_minmax(0,1fr)_auto] min-[760px]:items-start">
+                            <span className="flex items-center gap-1.5 pt-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                              <Terminal className="size-3.5" />
+                              {t("sessionManager.resumeCommandLabel", {
+                                defaultValue: "Resume",
+                              })}
+                            </span>
+                              <code
+                              className="min-w-0 break-all font-mono text-[11px] leading-5 text-foreground/85"
+                                title={selectedSession.resumeCommand}
+                              >
+                                {selectedSession.resumeCommand}
+                              </code>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                              className="h-7 justify-self-start rounded-lg px-2 text-[11px] min-[760px]:justify-self-end"
+                                aria-label={t("sessionManager.copyResumeCommand", {
+                                  defaultValue: "复制恢复命令",
+                                })}
+                                onClick={() =>
+                                  void handleCopy(
+                                    selectedSession.resumeCommand!,
+                                    t("sessionManager.resumeCommandCopied", {
+                                      defaultValue: "已复制恢复命令",
+                                    }),
+                                  )
+                                }
+                              >
+                                <Copy className="size-3.5" />
+                                {t("common.copy", { defaultValue: "复制" })}
+                              </Button>
+                          </div>
+                        )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-1.5 shrink-0">
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button

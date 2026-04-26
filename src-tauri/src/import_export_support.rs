@@ -10,7 +10,7 @@ use crate::store::AppState;
 
 pub fn default_sql_export_file_name() -> String {
     format!(
-        "cc-switch-export-{}.sql",
+        "cli-memory-export-{}.sql",
         Local::now().format("%Y%m%d_%H%M%S")
     )
 }

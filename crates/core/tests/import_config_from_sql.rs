@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use cc_switch::{AppState, Database};
-use cc_switch_core::{import_config_from_sql_bytes, CoreContext};
+use cli_memory::{AppState, Database};
+use cli_memory_core::{import_config_from_sql_bytes, CoreContext};
 
 #[test]
 fn failed_sql_upload_does_not_pollute_existing_database() {
@@ -9,7 +9,7 @@ fn failed_sql_upload_does_not_pollute_existing_database() {
     let before = db.export_sql_string().expect("export before");
     let ctx = CoreContext::from_app_state(AppState::new(db.clone()));
 
-    let invalid_sql = "-- CC Switch SQLite 导出\nTHIS IS NOT VALID SQL;";
+    let invalid_sql = "-- CLI Memory SQLite 导出\nTHIS IS NOT VALID SQL;";
     let err = import_config_from_sql_bytes(&ctx, invalid_sql.as_bytes())
         .expect_err("invalid SQL should fail");
 

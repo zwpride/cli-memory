@@ -17,11 +17,11 @@ pub struct ClaudeOfficialAuthStatus {
 }
 
 fn credentials_path() -> std::path::PathBuf {
-    cc_switch::get_claude_config_dir().join(".credentials.json")
+    cli_memory::get_claude_config_dir().join(".credentials.json")
 }
 
 fn settings_path() -> std::path::PathBuf {
-    cc_switch::get_claude_settings_path()
+    cli_memory::get_claude_settings_path()
 }
 
 fn cli_available() -> bool {
@@ -113,7 +113,7 @@ fn token_is_expired(expires_at: &serde_json::Value) -> bool {
 }
 
 pub fn get_claude_official_auth_status() -> ClaudeOfficialAuthStatus {
-    let config_dir = cc_switch::get_claude_config_dir();
+    let config_dir = cli_memory::get_claude_config_dir();
     let settings_path = settings_path();
     let credentials_path = credentials_path();
     let credentials_file_exists = credentials_path.exists();

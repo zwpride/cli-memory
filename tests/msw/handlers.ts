@@ -21,6 +21,7 @@ import {
   setAppConfigDirOverrideState,
   getMcpConfig,
   setMcpServerEnabled,
+  searchSessions,
   upsertMcpServer,
   deleteMcpServer,
 } from "./state";
@@ -112,6 +113,14 @@ export const handlers = [
   http.post(`${TAURI_ENDPOINT}/open_external`, () => success(true)),
 
   http.post(`${TAURI_ENDPOINT}/list_sessions`, () => success(listSessions())),
+
+  http.post(`${TAURI_ENDPOINT}/search_sessions`, async ({ request }) => {
+    const { query = "", providerId } = await withJson<{
+      query?: string;
+      providerId?: string;
+    }>(request);
+    return success(searchSessions(query, providerId));
+  }),
 
   http.post(`${TAURI_ENDPOINT}/get_session_messages`, async ({ request }) => {
     const { providerId, sourcePath } = await withJson<{

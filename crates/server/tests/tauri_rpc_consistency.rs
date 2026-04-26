@@ -2,8 +2,8 @@ use std::collections::BTreeSet;
 use std::fs;
 use std::path::PathBuf;
 
-use cc_switch_core::WEB_COMPAT_TAURI_COMMANDS;
-use cc_switch_server::api::{PUBLIC_METHODS, RPC_BUSINESS_METHODS, WS_PROTOCOL_METHODS};
+use cli_memory_core::WEB_COMPAT_TAURI_COMMANDS;
+use cli_memory_server::api::{PUBLIC_METHODS, RPC_BUSINESS_METHODS, WS_PROTOCOL_METHODS};
 
 fn sorted_set<'a>(items: &'a [&'a str]) -> BTreeSet<&'a str> {
     items.iter().copied().collect()

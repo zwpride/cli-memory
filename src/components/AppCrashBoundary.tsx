@@ -51,7 +51,7 @@ export function AppCrashScreen({
     <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.1),_transparent_40%),linear-gradient(180deg,_rgba(248,250,252,1),_rgba(241,245,249,0.96))] px-6 py-12 text-slate-950 dark:bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_transparent_36%),linear-gradient(180deg,_rgb(2,6,23),_rgb(15,23,42))] dark:text-slate-50">
       <div className="w-full max-w-2xl rounded-xl border border-slate-200/80 bg-white/92 p-8 shadow-lg dark:border-slate-800 dark:bg-slate-950/78">
         <div className="inline-flex rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-medium tracking-[0.16em] text-amber-700 dark:text-amber-300">
-          CC SWITCH RECOVERY
+          CLI MEMORY RECOVERY
         </div>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight">{title}</h1>
         <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600 dark:text-slate-300">

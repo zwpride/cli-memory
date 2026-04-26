@@ -40,7 +40,7 @@ pub async fn upgrade_handler(
     // 2. If auth_config (web auth) is set, check cookie
     // 3. If neither is set, allow connection
 
-    // Check query param auth (backward compatibility with CC_SWITCH_AUTH_TOKEN)
+    // Check query param auth (backward compatibility with CLI_MEMORY_AUTH_TOKEN)
     if let Some(expected_token) = &state.auth_token {
         match query.auth.as_deref() {
             Some(token) if token == expected_token => {

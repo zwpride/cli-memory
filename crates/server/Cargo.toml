@@ -31,7 +31,7 @@ hex = "0.4"
 dirs = "5"
 
 [dev-dependencies]
-cc_switch = { path = "../../src-tauri", package = "cc-switch", default-features = false, features = ["headless"] }
+cli_memory = { path = "../../src-tauri", package = "cli-memory", default-features = false, features = ["headless"] }
 tower = { version = "0.5", features = ["util"] }
 
 [profile.release]

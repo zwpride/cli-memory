@@ -249,7 +249,7 @@ function buildWsUrl(): string {
 
   const token =
     import.meta.env.VITE_CLI_MEMORY_AUTH_TOKEN ||
-    localStorage.getItem("cc_switch_auth_token");
+    localStorage.getItem("cli_memory_auth_token");
   if (token) {
     url.searchParams.set("auth", token);
   }

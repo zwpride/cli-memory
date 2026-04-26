@@ -30,6 +30,16 @@ BACKEND_BIN="$PROJECT_ROOT/crates/server/target/release/cli-memory"
 
 mkdir -p "$RUNTIME_DIR"
 
+case "$BACKEND_HOST" in
+    localhost)
+        BACKEND_HOST="127.0.0.1"
+        ;;
+    *:*)
+        echo "❌ IPv6 bind hosts are not supported. Use 0.0.0.0 or an IPv4 address."
+        exit 1
+        ;;
+esac
+
 is_pid_running() {
     local pid="${1:-}"
     [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null
@@ -142,7 +152,11 @@ start_detached() {
     local log_file="$1"
     shift
 
-    nohup "$@" </dev/null >>"$log_file" 2>&1 &
+    if command -v setsid >/dev/null 2>&1; then
+        nohup setsid "$@" </dev/null >>"$log_file" 2>&1 &
+    else
+        nohup "$@" </dev/null >>"$log_file" 2>&1 &
+    fi
     printf '%s\n' "$!"
 }
 
@@ -160,6 +174,9 @@ if pid="$(read_pid_file "$BACKEND_PID_FILE" 2>/dev/null || true)"; [[ -n "$pid" 
         echo "  Listen:   http://$BACKEND_HOST:$BACKEND_PORT"
         echo "  Web UI:   http://$BACKEND_PROBE_HOST:$BACKEND_PORT"
         echo "  API:      http://$BACKEND_PROBE_HOST:$BACKEND_PORT/api"
+        echo ""
+        echo "  Mac SSH:  ssh -L $BACKEND_PORT:127.0.0.1:$BACKEND_PORT <user>@<host>"
+        echo "            then open http://127.0.0.1:$BACKEND_PORT/"
         echo ""
         echo "  Stop:     ./stop-web.sh"
         echo "================================"
@@ -182,6 +199,9 @@ if probe_tcp "$BACKEND_PROBE_HOST" "$BACKEND_PORT"; then
         echo "  Listen:   http://$BACKEND_HOST:$BACKEND_PORT"
         echo "  Web UI:   http://$BACKEND_PROBE_HOST:$BACKEND_PORT"
         echo "  API:      http://$BACKEND_PROBE_HOST:$BACKEND_PORT/api"
+        echo ""
+        echo "  Mac SSH:  ssh -L $BACKEND_PORT:127.0.0.1:$BACKEND_PORT <user>@<host>"
+        echo "            then open http://127.0.0.1:$BACKEND_PORT/"
         echo ""
         echo "  Stop:     ./stop-web.sh"
         echo "================================"
@@ -250,6 +270,9 @@ echo ""
 echo "  Listen:   http://$BACKEND_HOST:$BACKEND_PORT"
 echo "  Web UI:   http://$BACKEND_PROBE_HOST:$BACKEND_PORT"
 echo "  API:      http://$BACKEND_PROBE_HOST:$BACKEND_PORT/api"
+echo ""
+echo "  Mac SSH:  ssh -L $BACKEND_PORT:127.0.0.1:$BACKEND_PORT <user>@<host>"
+echo "            then open http://127.0.0.1:$BACKEND_PORT/"
 echo ""
 echo "  Logs:     tail -f $BACKEND_LOG_FILE"
 echo "  Stop:     ./stop-web.sh"

@@ -1,17 +1,17 @@
 [package]
-name = "cc-switch"
+name = "cli-memory"
 version = "3.13.0"
 description = "All-in-One Assistant for Claude Code, Codex & Gemini CLI"
 authors = ["Jason Young"]
 license = "MIT"
-repository = "https://github.com/farion1231/cc-switch"
+repository = "https://github.com/farion1231/cli-memory"
 edition = "2021"
 rust-version = "1.85.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-name = "cc_switch_lib"
+name = "cli_memory_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 doctest = false
 
@@ -93,7 +93,7 @@ json5 = "0.4"
 json-five = "0.3.1"
 
 [[bin]]
-name = "cc-switch"
+name = "cli-memory"
 path = "src/main.rs"
 required-features = ["desktop"]
 

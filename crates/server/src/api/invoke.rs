@@ -82,7 +82,7 @@ pub async fn invoke_handler(
                     if success {
                         if let Some(token) = result.get("token").and_then(|v| v.as_str()) {
                             let cookie = format!(
-                                "cc-switch-session={}; HttpOnly; SameSite=Strict; Max-Age=604800; Path=/",
+                                "cli-memory-session={}; HttpOnly; SameSite=Strict; Max-Age=604800; Path=/",
                                 token
                             );
                             if let Ok(cookie_value) = HeaderValue::from_str(&cookie) {

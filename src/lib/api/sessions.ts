@@ -17,6 +17,10 @@ export const sessionsApi = {
     return await invoke("list_sessions");
   },
 
+  async search(query: string, providerId?: string): Promise<SessionMeta[]> {
+    return await invoke("search_sessions", { query, providerId });
+  },
+
   async getMessages(
     providerId: string,
     sourcePath: string,

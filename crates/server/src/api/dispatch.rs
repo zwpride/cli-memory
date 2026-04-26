@@ -112,6 +112,7 @@ rpc_business_methods!(
     "delete_universal_provider",
     "sync_universal_provider",
     "list_sessions",
+    "search_sessions",
     "get_session_messages",
     "launch_session_terminal",
     "run_claude_official_auth_command",
@@ -1317,6 +1318,18 @@ pub async fn dispatch_command(
 
         "list_sessions" => {
             let sessions = cli_memory_core::list_sessions()
+                .await
+                .map_err(RpcError::app_error)?;
+            Ok(sessions)
+        }
+
+        "search_sessions" => {
+            let query = get_str_param(params, &["query"])?;
+            let provider_id = params
+                .get("providerId")
+                .and_then(|value| value.as_str())
+                .or_else(|| params.get("provider_id").and_then(|value| value.as_str()));
+            let sessions = cli_memory_core::search_sessions(query, provider_id)
                 .await
                 .map_err(RpcError::app_error)?;
             Ok(sessions)

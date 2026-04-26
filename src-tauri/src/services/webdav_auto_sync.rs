@@ -7,6 +7,8 @@ use std::time::{Duration, Instant};
 
 #[cfg(feature = "desktop")]
 use serde_json::json;
+#[cfg(feature = "desktop")]
+use tauri::Emitter;
 use tokio::sync::mpsc::error::TrySendError;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 

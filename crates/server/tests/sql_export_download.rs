@@ -6,9 +6,9 @@ use axum::{
     routing::get,
     Router,
 };
-use cc_switch::{AppState, Database};
-use cc_switch_core::CoreContext;
-use cc_switch_server::{
+use cli_memory::{AppState, Database};
+use cli_memory_core::CoreContext;
+use cli_memory_server::{
     api::export_sql_download_handler,
     create_event_bus,
     AuthConfig, ServerState, SessionStore,
@@ -85,12 +85,12 @@ async fn sql_download_returns_attachment_headers_and_sql_body() {
         .get(header::CONTENT_DISPOSITION)
         .and_then(|value| value.to_str().ok())
         .expect("content disposition");
-    assert!(disposition.starts_with("attachment; filename=\"cc-switch-export-"));
+    assert!(disposition.starts_with("attachment; filename=\"cli-memory-export-"));
     assert!(disposition.ends_with(".sql\""));
 
     let body = to_bytes(response.into_body(), usize::MAX)
         .await
         .expect("body bytes");
     let sql = String::from_utf8(body.to_vec()).expect("utf8 sql");
-    assert!(sql.starts_with("-- CC Switch SQLite 导出"));
+    assert!(sql.starts_with("-- CLI Memory SQLite 导出"));
 }

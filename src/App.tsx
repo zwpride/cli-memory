@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BarChart3, Check, ChevronRight, Eye, EyeOff, FolderGit2, FolderArchive, LayoutGrid, Link2, MessageSquare, Moon, Pencil, RefreshCw, Save, Sun } from "lucide-react";
+import { BarChart3, Check, ChevronRight, Copy, Eye, EyeOff, FolderGit2, FolderArchive, LayoutGrid, Link2, MessageSquare, Moon, Pencil, RefreshCw, Save, Sun } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppSwitcher } from "@/components/AppSwitcher";
@@ -281,6 +281,50 @@ const statusToneClass = (tone: "positive" | "warning" | "neutral"): string => {
       return "border-black/[0.08] bg-white/72 text-muted-foreground dark:border-white/[0.08] dark:bg-white/[0.05]";
   }
 };
+
+function OverviewPathRow({
+  label,
+  value,
+  fallback,
+  copyLabel,
+  onCopy,
+}: {
+  label: string;
+  value?: string | null;
+  fallback: string;
+  copyLabel: string;
+  onCopy: (text: string) => void;
+}) {
+  const text = value?.trim();
+
+  return (
+    <div className="rounded-xl border border-black/[0.08] bg-white/72 px-3 py-3 dark:border-white/[0.08] dark:bg-white/[0.05]">
+      <div className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+        {label}
+      </div>
+      {text ? (
+        <div className="flex flex-col gap-2 min-[720px]:flex-row min-[720px]:items-start">
+          <code className="min-w-0 flex-1 break-all font-mono text-sm leading-6 text-foreground">
+            {text}
+          </code>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 w-fit shrink-0 gap-1.5 rounded-lg px-2.5 text-xs"
+            aria-label={`${copyLabel} ${label}`}
+            onClick={() => onCopy(text)}
+          >
+            <Copy className="h-3.5 w-3.5" />
+            {copyLabel}
+          </Button>
+        </div>
+      ) : (
+        <div className="text-sm leading-6 text-muted-foreground">{fallback}</div>
+      )}
+    </div>
+  );
+}
 
 function App() {
   const { t } = useTranslation();
@@ -589,6 +633,21 @@ function App() {
     await Promise.all(refreshTasks);
   };
 
+  const handleCopyOverviewText = useCallback(
+    async (text: string) => {
+      try {
+        await navigator.clipboard.writeText(text);
+        toast.success(t("common.copied", { defaultValue: "已复制" }));
+      } catch (error) {
+        toast.error(
+          extractErrorMessage(error) ||
+            t("common.copyFailed", { defaultValue: "复制失败" }),
+        );
+      }
+    },
+    [t],
+  );
+
   const renderOverviewPage = () => {
     const configDetected = Boolean(configStatus?.exists || configSections.length > 0);
     const configStatusPath = configStatus?.path ?? null;
@@ -735,8 +794,8 @@ function App() {
     return (
       <div className={pageContainerClass}>
         <section className="app-shell relative overflow-hidden px-5 py-5 lg:px-6 lg:py-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="min-w-0 max-w-3xl">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
+            <div className="app-panel-inset min-w-0 px-4 py-4">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className={sectionBadgeClass}>
                   {t(`apps.${activeApp}`)}
@@ -746,6 +805,18 @@ function App() {
                 </Badge>
                 <Badge variant="outline" className={sectionBadgeClass}>
                   {t("common.readOnlyPreview", { defaultValue: "只读预览" })}
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    sectionBadgeClass,
+                    isConfigRefreshing &&
+                      "border-blue-500/25 bg-blue-500/10 text-blue-700 dark:text-blue-300",
+                  )}
+                >
+                  {isConfigRefreshing
+                    ? t("common.refreshing", { defaultValue: "刷新中" })
+                    : t("common.liveSnapshot", { defaultValue: "实时快照" })}
                 </Badge>
               </div>
               <h2 className="mt-4 text-3xl font-semibold tracking-tight text-foreground md:text-[2rem]">
@@ -786,11 +857,23 @@ function App() {
                 </button>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
+
+            <div className="app-panel-inset grid gap-3 px-4 py-4">
+              <div>
+                <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                  {t("common.quickActions", { defaultValue: "快捷操作" })}
+                </div>
+                <div className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {t("common.overviewQuickActionsHint", {
+                    defaultValue:
+                      "刷新本地 CLI 状态，或切换敏感字段显示模式。",
+                  })}
+                </div>
+              </div>
               <Button
                 type="button"
                 variant="outline"
-                className={utilityActionButtonClass}
+                className={cn(utilityActionButtonClass, "justify-start")}
                 onClick={() => void handleRefreshLocalConfig()}
                 disabled={isConfigRefreshing}
               >
@@ -799,12 +882,32 @@ function App() {
                 />
                 {t("common.refresh", { defaultValue: "刷新" })}
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className={cn(
+                  utilityActionButtonClass,
+                  "justify-start",
+                  showRawValues &&
+                    "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+                )}
+                onClick={() => setShowRawValues((v) => !v)}
+              >
+                {showRawValues ? (
+                  <Eye className="mr-2 h-4 w-4" />
+                ) : (
+                  <EyeOff className="mr-2 h-4 w-4" />
+                )}
+                {showRawValues
+                  ? t("common.showingRawValues", { defaultValue: "显示原始值" })
+                  : t("common.maskedSecrets", { defaultValue: "敏感密钥已脱敏" })}
+              </Button>
             </div>
           </div>
 
-          <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             {summaryCards.map((card) => (
-              <div key={card.label} className="app-panel-inset px-4 py-4">
+              <div key={card.label} className="app-panel-inset min-h-[148px] px-4 py-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
@@ -845,30 +948,31 @@ function App() {
             {/* ── 路径信息 ── */}
             <TabsContent value="paths" className="mt-3">
               <div className="app-panel-inset px-4 py-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                      {t("settings.advanced.configDir.title", { defaultValue: "配置目录" })}
-                    </div>
-                    <div className="mt-2 break-all font-mono text-sm leading-6 text-foreground">
-                      {configDirError
-                        ? extractErrorMessage(configDirError)
-                        : configDir ?? t("common.loading", { defaultValue: "读取中" })}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                      {t("common.statusPath", { defaultValue: "状态路径" })}
-                    </div>
-                    <div className="mt-2 break-all font-mono text-sm leading-6 text-foreground">
-                      {configStatusError
+                <div className="grid gap-3 xl:grid-cols-2">
+                  <OverviewPathRow
+                    label={t("settings.advanced.configDir.title", {
+                      defaultValue: "配置目录",
+                    })}
+                    value={
+                      configDirError ? extractErrorMessage(configDirError) : configDir
+                    }
+                    fallback={t("common.loading", { defaultValue: "读取中" })}
+                    copyLabel={t("common.copy", { defaultValue: "复制" })}
+                    onCopy={(text) => void handleCopyOverviewText(text)}
+                  />
+                  <OverviewPathRow
+                    label={t("common.statusPath", { defaultValue: "状态路径" })}
+                    value={
+                      configStatusError
                         ? extractErrorMessage(configStatusError)
-                        : configStatus?.path ||
-                          t("common.noConfigDetected", {
-                            defaultValue: "未检测到可展示的配置内容",
-                          })}
-                    </div>
-                  </div>
+                        : configStatus?.path
+                    }
+                    fallback={t("common.noConfigDetected", {
+                      defaultValue: "未检测到可展示的配置内容",
+                    })}
+                    copyLabel={t("common.copy", { defaultValue: "复制" })}
+                    onCopy={(text) => void handleCopyOverviewText(text)}
+                  />
                 </div>
 
                 <div className="mt-5 text-xs uppercase tracking-[0.16em] text-muted-foreground">
@@ -1300,12 +1404,28 @@ function App() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-primary/30">
       <header className="sticky top-0 z-40 px-4 pt-4 md:px-6 lg:px-10">
-        <div className="app-toolbar-shell mx-auto flex h-[60px] items-center justify-between gap-3 px-3 md:px-4">
-          <span className="text-lg font-semibold tracking-tight text-foreground">
-            CLI Memory
-          </span>
+        <div className="app-toolbar-shell mx-auto flex min-h-[72px] flex-col gap-3 px-3 py-3 md:px-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-lg font-semibold tracking-tight text-foreground">
+                CLI Memory
+              </div>
+              <div className="mt-0.5 text-xs text-muted-foreground">
+                {primaryPageItems.find((panel) => panel.id === primaryPage)?.label}
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 w-9 shrink-0 rounded-full p-0 lg:hidden"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              title={theme === "dark" ? "Light mode" : "Dark mode"}
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+          </div>
 
-          <div className="flex min-w-0 items-center justify-end gap-2 overflow-x-auto py-3 pr-1">
+          <div className="flex min-w-0 items-center gap-2 overflow-x-auto pb-1 pr-1 lg:justify-end lg:pb-0">
             <AppSwitcher activeApp={activeApp} onSwitch={setActiveApp} />
             <div className="app-segmented flex min-w-0 items-center overflow-x-auto">
               {primaryPageItems.map((panel) => (
@@ -1331,7 +1451,7 @@ function App() {
             <Button
               variant="ghost"
               size="sm"
-              className="h-9 w-9 shrink-0 rounded-full p-0"
+              className="hidden h-9 w-9 shrink-0 rounded-full p-0 lg:inline-flex"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               title={theme === "dark" ? "Light mode" : "Dark mode"}
             >
