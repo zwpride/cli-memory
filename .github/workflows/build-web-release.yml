@@ -59,7 +59,7 @@ jobs:
             VERSION="$(node -p "require('./package.json').version")"
           fi
 
-          ASSET_NAME="cc-switch-web-v${VERSION}-windows-x86_64.exe"
+          ASSET_NAME="cli-memory-web-v${VERSION}-windows-x86_64.exe"
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "ASSET_NAME=$ASSET_NAME" >> "$GITHUB_ENV"
 
@@ -87,13 +87,13 @@ jobs:
 
       - name: Smoke test Web release binary
         shell: bash
-        run: pnpm smoke:web-release -- --binary crates/server/target/release/cc-switch-web.exe
+        run: pnpm smoke:web-release -- --binary crates/server/target/release/cli-memory.exe
 
       - name: Create release asset
         shell: bash
         run: |
           mkdir -p release-assets
-          cp crates/server/target/release/cc-switch-web.exe "release-assets/${ASSET_NAME}"
+          cp crates/server/target/release/cli-memory.exe "release-assets/${ASSET_NAME}"
           ls -lah release-assets/
 
       - name: Upload build artifact
@@ -158,7 +158,7 @@ jobs:
             VERSION="$(node -p "require('./package.json').version")"
           fi
 
-          ASSET_NAME="cc-switch-web-v${VERSION}-linux-x86_64-ubuntu20.04"
+          ASSET_NAME="cli-memory-web-v${VERSION}-linux-x86_64-ubuntu20.04"
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "ASSET_NAME=$ASSET_NAME" >> "$GITHUB_ENV"
 
@@ -186,13 +186,13 @@ jobs:
 
       - name: Smoke test Web release binary
         shell: bash
-        run: pnpm smoke:web-release -- --binary crates/server/target/release/cc-switch-web
+        run: pnpm smoke:web-release -- --binary crates/server/target/release/cli-memory
 
       - name: Create release asset
         shell: bash
         run: |
           mkdir -p release-assets
-          cp crates/server/target/release/cc-switch-web "release-assets/${ASSET_NAME}"
+          cp crates/server/target/release/cli-memory "release-assets/${ASSET_NAME}"
           chmod +x "release-assets/${ASSET_NAME}"
           ls -lah release-assets/
 
@@ -221,7 +221,7 @@ jobs:
       - name: Restore executable bits
         shell: bash
         run: |
-          chmod +x release-assets/cc-switch-web-v${GITHUB_REF_NAME#v}-linux-x86_64-ubuntu20.04
+          chmod +x release-assets/cli-memory-web-v${GITHUB_REF_NAME#v}-linux-x86_64-ubuntu20.04
           ls -lah release-assets/
 
       - name: Create release notes
@@ -229,18 +229,18 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           {
-            printf '## CC-Switch Web v%s\n\n' "$VERSION"
+            printf '## CLI Memory Web v%s\n\n' "$VERSION"
             printf '%s\n\n' 'Official GitHub Releases now publish the Web runtime only.'
             printf '%s\n' '### Assets'
-            printf -- '- Windows x86_64: `cc-switch-web-v%s-windows-x86_64.exe`\n' "$VERSION"
-            printf -- '- Linux x86_64 baseline: `cc-switch-web-v%s-linux-x86_64-ubuntu20.04` (built in an Ubuntu 20.04 container on an ubuntu-22.04 runner)\n\n' "$VERSION"
+            printf -- '- Windows x86_64: `cli-memory-web-v%s-windows-x86_64.exe`\n' "$VERSION"
+            printf -- '- Linux x86_64 baseline: `cli-memory-web-v%s-linux-x86_64-ubuntu20.04` (built in an Ubuntu 20.04 container on an ubuntu-22.04 runner)\n\n' "$VERSION"
             printf '%s\n' '### Quick start'
-            printf -- '- Windows: run `cc-switch-web-v%s-windows-x86_64.exe`\n' "$VERSION"
-            printf -- '- Linux: `chmod +x ./cc-switch-web-v%s-linux-x86_64-ubuntu20.04 && ./cc-switch-web-v%s-linux-x86_64-ubuntu20.04`\n\n' "$VERSION" "$VERSION"
+            printf -- '- Windows: run `cli-memory-web-v%s-windows-x86_64.exe`\n' "$VERSION"
+            printf -- '- Linux: `chmod +x ./cli-memory-web-v%s-linux-x86_64-ubuntu20.04 && ./cli-memory-web-v%s-linux-x86_64-ubuntu20.04`\n\n' "$VERSION" "$VERSION"
             printf '%s\n' '### Runtime configuration'
             printf '%s\n' '- Default address: `http://127.0.0.1:17666`'
-            printf '%s\n' '- Override port: `CC_SWITCH_PORT=8080`'
-            printf '%s\n\n' '- Override host: `CC_SWITCH_HOST=0.0.0.0`'
+            printf '%s\n' '- Override port: `CLI_MEMORY_PORT=8080`'
+            printf '%s\n\n' '- Override host: `CLI_MEMORY_HOST=0.0.0.0`'
             printf '%s\n' 'Desktop Tauri packages are not part of this release.'
           } > release-notes.md
 

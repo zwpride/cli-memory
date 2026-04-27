@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Table,
@@ -27,6 +27,7 @@ import {
   getLocaleFromLanguage,
   parseFiniteNumber,
 } from "./format";
+import { cn } from "@/lib/utils";
 
 interface RequestLogTableProps {
   appType?: string;
@@ -37,6 +38,43 @@ const ONE_DAY_SECONDS = 24 * 60 * 60;
 const MAX_FIXED_RANGE_SECONDS = 30 * ONE_DAY_SECONDS;
 
 type TimeMode = "rolling" | "fixed";
+
+function FilterField({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <label className="grid min-w-0 gap-1.5">
+      <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </span>
+      {children}
+    </label>
+  );
+}
+
+function getDurationClass(seconds: number) {
+  if (!Number.isFinite(seconds)) {
+    return "bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300";
+  }
+  if (seconds <= 5) {
+    return "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300";
+  }
+  if (seconds <= 120) {
+    return "bg-orange-100 text-orange-800 dark:bg-orange-500/15 dark:text-orange-300";
+  }
+  return "bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300";
+}
+
+function pillClass(className: string) {
+  return cn(
+    "inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[11px] font-medium",
+    className,
+  );
+}
 
 export function RequestLogTable({
   appType: dashboardAppType,
@@ -177,139 +215,191 @@ export function RequestLogTable({
 
   const rollingRangeForDisplay =
     draftTimeMode === "rolling" ? getRollingRange() : null;
+  const activeFilterCount = [
+    effectiveFilters.appType,
+    appliedFilters.providerName,
+    appliedFilters.model,
+    appliedFilters.statusCode,
+    appliedTimeMode === "fixed" ? appliedFilters.startDate : undefined,
+    appliedTimeMode === "fixed" ? appliedFilters.endDate : undefined,
+  ].filter((value) => value !== undefined && value !== "").length;
 
   return (
     <div className="min-w-0 space-y-4">
       {/* 筛选栏 */}
       <div className="app-panel-inset grid gap-4 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="text-sm font-semibold text-foreground">
+              {t("usage.filters", { defaultValue: "筛选条件" })}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {appliedTimeMode === "rolling"
+                ? t("usage.rollingWindowHint", {
+                    defaultValue:
+                      "默认查看最近 24 小时，可切换为固定时间范围。",
+                  })
+                : t("usage.fixedWindowHint", {
+                    defaultValue: "固定时间范围最多 30 天。",
+                  })}
+            </div>
+          </div>
+          <span className="rounded-full border border-black/[0.08] bg-white/70 px-2.5 py-1 text-[11px] text-muted-foreground dark:border-white/[0.08] dark:bg-white/[0.05]">
+            {t("usage.activeFilters", {
+              defaultValue: "{{count}} active",
+              count: activeFilterCount,
+            })}
+          </span>
+        </div>
+
         <div className="grid gap-3 xl:grid-cols-[132px_150px_minmax(0,1fr)]">
-          <Select
-            value={
-              dashboardAppTypeActive
-                ? dashboardAppType
-                : draftFilters.appType || "all"
-            }
-            onValueChange={(v) =>
-              setDraftFilters({
-                ...draftFilters,
-                appType: v === "all" ? undefined : v,
-              })
-            }
-            disabled={!!dashboardAppTypeActive}
-          >
-            <SelectTrigger className="h-9 w-full bg-background">
-              <SelectValue placeholder={t("usage.appType")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("usage.allApps")}</SelectItem>
-              <SelectItem value="claude">Claude</SelectItem>
-              <SelectItem value="codex">Codex</SelectItem>
-              <SelectItem value="gemini">Gemini</SelectItem>
-            </SelectContent>
-          </Select>
+          <FilterField label={t("usage.appType", { defaultValue: "应用" })}>
+            <Select
+              value={
+                dashboardAppTypeActive
+                  ? dashboardAppType
+                  : draftFilters.appType || "all"
+              }
+              onValueChange={(v) =>
+                setDraftFilters({
+                  ...draftFilters,
+                  appType: v === "all" ? undefined : v,
+                })
+              }
+              disabled={!!dashboardAppTypeActive}
+            >
+              <SelectTrigger className="h-9 w-full bg-background">
+                <SelectValue placeholder={t("usage.appType")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("usage.allApps")}</SelectItem>
+                <SelectItem value="claude">Claude</SelectItem>
+                <SelectItem value="codex">Codex</SelectItem>
+                <SelectItem value="gemini">Gemini</SelectItem>
+              </SelectContent>
+            </Select>
+          </FilterField>
 
-          <Select
-            value={draftFilters.statusCode?.toString() || "all"}
-            onValueChange={(v) =>
-              setDraftFilters({
-                ...draftFilters,
-                statusCode:
-                  v === "all"
-                    ? undefined
-                    : Number.isFinite(Number.parseInt(v, 10))
-                      ? Number.parseInt(v, 10)
-                      : undefined,
-              })
-            }
+          <FilterField
+            label={t("usage.statusCode", { defaultValue: "状态码" })}
           >
-            <SelectTrigger className="h-9 w-full bg-background">
-              <SelectValue placeholder={t("usage.statusCode")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("common.all")}</SelectItem>
-              <SelectItem value="200">200 OK</SelectItem>
-              <SelectItem value="400">400 Bad Request</SelectItem>
-              <SelectItem value="401">401 Unauthorized</SelectItem>
-              <SelectItem value="429">429 Rate Limit</SelectItem>
-              <SelectItem value="500">500 Server Error</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select
+              value={draftFilters.statusCode?.toString() || "all"}
+              onValueChange={(v) =>
+                setDraftFilters({
+                  ...draftFilters,
+                  statusCode:
+                    v === "all"
+                      ? undefined
+                      : Number.isFinite(Number.parseInt(v, 10))
+                        ? Number.parseInt(v, 10)
+                        : undefined,
+                })
+              }
+            >
+              <SelectTrigger className="h-9 w-full bg-background">
+                <SelectValue placeholder={t("usage.statusCode")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("common.all")}</SelectItem>
+                <SelectItem value="200">200 OK</SelectItem>
+                <SelectItem value="400">400 Bad Request</SelectItem>
+                <SelectItem value="401">401 Unauthorized</SelectItem>
+                <SelectItem value="429">429 Rate Limit</SelectItem>
+                <SelectItem value="500">500 Server Error</SelectItem>
+              </SelectContent>
+            </Select>
+          </FilterField>
 
-          <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_180px]">
-            <div className="relative min-w-0">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_200px]">
+            <FilterField
+              label={t("usage.provider", { defaultValue: "供应商" })}
+            >
+              <div className="relative min-w-0">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  aria-label={t("usage.searchProviderPlaceholder")}
+                  placeholder={t("usage.searchProviderPlaceholder")}
+                  className="h-9 bg-background pl-9"
+                  value={draftFilters.providerName || ""}
+                  onChange={(e) =>
+                    setDraftFilters({
+                      ...draftFilters,
+                      providerName: e.target.value || undefined,
+                    })
+                  }
+                />
+              </div>
+            </FilterField>
+            <FilterField
+              label={t("usage.billingModel", { defaultValue: "模型" })}
+            >
               <Input
-                placeholder={t("usage.searchProviderPlaceholder")}
-                className="h-9 bg-background pl-9"
-                value={draftFilters.providerName || ""}
+                aria-label={t("usage.searchModelPlaceholder")}
+                placeholder={t("usage.searchModelPlaceholder")}
+                className="h-9 bg-background"
+                value={draftFilters.model || ""}
                 onChange={(e) =>
                   setDraftFilters({
                     ...draftFilters,
-                    providerName: e.target.value || undefined,
+                    model: e.target.value || undefined,
                   })
                 }
               />
-            </div>
-            <Input
-              placeholder={t("usage.searchModelPlaceholder")}
-              className="h-9 bg-background"
-              value={draftFilters.model || ""}
-              onChange={(e) =>
-                setDraftFilters({
-                  ...draftFilters,
-                  model: e.target.value || undefined,
-                })
-              }
-            />
+            </FilterField>
           </div>
         </div>
 
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
-          <div className="grid min-w-0 gap-2 text-sm text-muted-foreground sm:grid-cols-[auto_minmax(0,200px)_auto_minmax(0,200px)] sm:items-center">
-            <span className="whitespace-nowrap">
-              {t("usage.timeRange")}:
-            </span>
-            <Input
-              type="datetime-local"
-              className="h-9 min-w-0 bg-background"
-              value={
-                (rollingRangeForDisplay?.startDate ?? draftFilters.startDate)
-                  ? timestampToLocalDatetime(
-                      (rollingRangeForDisplay?.startDate ??
-                        draftFilters.startDate) as number,
-                    )
-                  : ""
-              }
-              onChange={(e) => {
-                const timestamp = localDatetimeToTimestamp(e.target.value);
-                setDraftTimeMode("fixed");
-                setDraftFilters({
-                  ...draftFilters,
-                  startDate: timestamp,
-                });
-              }}
-            />
-            <span className="hidden text-center sm:block">-</span>
-            <Input
-              type="datetime-local"
-              className="h-9 min-w-0 bg-background"
-              value={
-                (rollingRangeForDisplay?.endDate ?? draftFilters.endDate)
-                  ? timestampToLocalDatetime(
-                      (rollingRangeForDisplay?.endDate ??
-                        draftFilters.endDate) as number,
-                    )
-                  : ""
-              }
-              onChange={(e) => {
-                const timestamp = localDatetimeToTimestamp(e.target.value);
-                setDraftTimeMode("fixed");
-                setDraftFilters({
-                  ...draftFilters,
-                  endDate: timestamp,
-                });
-              }}
-            />
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
+          <div className="grid min-w-0 gap-3 md:grid-cols-[minmax(0,220px)_minmax(0,220px)]">
+            <FilterField
+              label={t("usage.startTime", { defaultValue: "开始时间" })}
+            >
+              <Input
+                type="datetime-local"
+                className="h-9 min-w-0 bg-background"
+                value={
+                  (rollingRangeForDisplay?.startDate ?? draftFilters.startDate)
+                    ? timestampToLocalDatetime(
+                        (rollingRangeForDisplay?.startDate ??
+                          draftFilters.startDate) as number,
+                      )
+                    : ""
+                }
+                onChange={(e) => {
+                  const timestamp = localDatetimeToTimestamp(e.target.value);
+                  setDraftTimeMode("fixed");
+                  setDraftFilters({
+                    ...draftFilters,
+                    startDate: timestamp,
+                  });
+                }}
+              />
+            </FilterField>
+            <FilterField
+              label={t("usage.endTime", { defaultValue: "结束时间" })}
+            >
+              <Input
+                type="datetime-local"
+                className="h-9 min-w-0 bg-background"
+                value={
+                  (rollingRangeForDisplay?.endDate ?? draftFilters.endDate)
+                    ? timestampToLocalDatetime(
+                        (rollingRangeForDisplay?.endDate ??
+                          draftFilters.endDate) as number,
+                      )
+                    : ""
+                }
+                onChange={(e) => {
+                  const timestamp = localDatetimeToTimestamp(e.target.value);
+                  setDraftTimeMode("fixed");
+                  setDraftFilters({
+                    ...draftFilters,
+                    endDate: timestamp,
+                  });
+                }}
+              />
+            </FilterField>
           </div>
 
           <div className="grid gap-2 sm:grid-cols-3 xl:ml-auto">
@@ -338,13 +428,16 @@ export function RequestLogTable({
               className="h-9 border border-black/[0.08] bg-white/56 px-2 shadow-sm hover:bg-white/80 dark:border-white/[0.08] dark:bg-white/[0.04] dark:hover:bg-white/[0.09]"
               aria-label={t("common.refresh")}
             >
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCw className="mr-0 h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">{t("common.refresh")}</span>
             </Button>
           </div>
         </div>
 
         {validationError && (
-          <div className="text-sm text-red-600">{validationError}</div>
+          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+            {validationError}
+          </div>
         )}
       </div>
 
@@ -354,7 +447,10 @@ export function RequestLogTable({
             {t("usage.requestLogs", { defaultValue: "请求日志" })}
           </span>
           <span className="rounded-full border border-black/[0.08] bg-white/70 px-2 py-0.5 text-[11px] text-muted-foreground dark:border-white/[0.08] dark:bg-white/[0.05]">
-            {t("usage.totalRecords", { total })}
+            {t("usage.totalRecords", {
+              defaultValue: "共 {{total}} 条记录",
+              total,
+            })}
           </span>
         </div>
         <span className="text-[11px] text-muted-foreground">
@@ -371,9 +467,9 @@ export function RequestLogTable({
         </div>
       ) : (
         <>
-          <div className="app-table-shell">
-            <Table className="min-w-[1180px]">
-              <TableHeader className="bg-white/42 dark:bg-white/[0.03]">
+          <div className="app-table-shell rounded-xl">
+            <Table className="min-w-[1180px] text-xs">
+              <TableHeader className="bg-white/72 backdrop-blur dark:bg-white/[0.04]">
                 <TableRow>
                   <TableHead className="whitespace-nowrap">
                     {t("usage.time")}
@@ -438,17 +534,22 @@ export function RequestLogTable({
                   logs.map((log) => (
                     <TableRow
                       key={log.requestId}
-                      className="hover:bg-white/72 dark:hover:bg-white/[0.08]"
+                      className="align-top hover:bg-white/72 dark:hover:bg-white/[0.08]"
                     >
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap text-muted-foreground">
                         {new Date(log.createdAt * 1000).toLocaleString(locale)}
                       </TableCell>
-                      <TableCell>
-                        {log.providerName || t("usage.unknownProvider")}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs max-w-[200px]">
+                      <TableCell className="max-w-[180px]">
                         <div
-                          className="truncate"
+                          className="truncate font-medium text-foreground"
+                          title={log.providerName || t("usage.unknownProvider")}
+                        >
+                          {log.providerName || t("usage.unknownProvider")}
+                        </div>
+                      </TableCell>
+                      <TableCell className="max-w-[220px] font-mono text-xs">
+                        <div
+                          className="truncate rounded-md bg-black/[0.025] px-2 py-1 text-foreground/90 dark:bg-white/[0.04]"
                           title={
                             log.requestModel && log.requestModel !== log.model
                               ? `${t("usage.requestModel")}: ${log.requestModel}\n${t("usage.responseModel")}: ${log.model}`
@@ -459,7 +560,7 @@ export function RequestLogTable({
                         </div>
                         {log.requestModel && log.requestModel !== log.model && (
                           <div
-                            className="truncate text-muted-foreground text-[10px]"
+                            className="mt-1 truncate text-[10px] text-muted-foreground"
                             title={log.requestModel}
                           >
                             ← {log.requestModel}
@@ -491,23 +592,18 @@ export function RequestLogTable({
                         {fmtUsd(log.totalCostUsd, 6)}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center justify-center gap-1">
+                        <div className="flex flex-wrap items-center justify-center gap-1">
                           {(() => {
                             const durationMs =
                               typeof log.durationMs === "number"
                                 ? log.durationMs
                                 : log.latencyMs;
                             const durationSec = durationMs / 1000;
-                            const durationColor = Number.isFinite(durationSec)
-                              ? durationSec <= 5
-                                ? "bg-green-100 text-green-800"
-                                : durationSec <= 120
-                                  ? "bg-orange-100 text-orange-800"
-                                  : "bg-red-200 text-red-900"
-                              : "bg-gray-100 text-gray-700";
                             return (
                               <span
-                                className={`inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs ${durationColor}`}
+                                className={pillClass(
+                                  getDurationClass(durationSec),
+                                )}
                               >
                                 {Number.isFinite(durationSec)
                                   ? `${Math.round(durationSec)}s`
@@ -519,16 +615,11 @@ export function RequestLogTable({
                             log.firstTokenMs != null &&
                             (() => {
                               const firstSec = log.firstTokenMs / 1000;
-                              const firstColor = Number.isFinite(firstSec)
-                                ? firstSec <= 5
-                                  ? "bg-green-100 text-green-800"
-                                  : firstSec <= 120
-                                    ? "bg-orange-100 text-orange-800"
-                                    : "bg-red-200 text-red-900"
-                                : "bg-gray-100 text-gray-700";
                               return (
                                 <span
-                                  className={`inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs ${firstColor}`}
+                                  className={pillClass(
+                                    getDurationClass(firstSec),
+                                  )}
                                 >
                                   {Number.isFinite(firstSec)
                                     ? `${firstSec.toFixed(1)}s`
@@ -537,11 +628,11 @@ export function RequestLogTable({
                               );
                             })()}
                           <span
-                            className={`inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs ${
+                            className={pillClass(
                               log.isStreaming
-                                ? "bg-blue-100 text-blue-800"
-                                : "bg-purple-100 text-purple-800"
-                            }`}
+                                ? "bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-300"
+                                : "bg-violet-100 text-violet-800 dark:bg-violet-500/15 dark:text-violet-300",
+                            )}
                           >
                             {log.isStreaming
                               ? t("usage.stream")
@@ -551,24 +642,32 @@ export function RequestLogTable({
                       </TableCell>
                       <TableCell>
                         <span
-                          className={`inline-flex rounded-full px-2 py-1 text-xs ${
+                          className={pillClass(
                             log.statusCode >= 200 && log.statusCode < 300
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
+                              ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300"
+                              : "bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300",
+                          )}
                         >
                           {log.statusCode}
                         </span>
                       </TableCell>
                       <TableCell>
                         {log.dataSource && log.dataSource !== "proxy" ? (
-                          <span className="inline-flex rounded-full px-2 py-0.5 text-[10px] bg-indigo-100 text-indigo-800">
+                          <span
+                            className={pillClass(
+                              "bg-indigo-100 text-indigo-800 dark:bg-indigo-500/15 dark:text-indigo-300",
+                            )}
+                          >
                             {t(`usage.dataSource.${log.dataSource}`, {
                               defaultValue: log.dataSource,
                             })}
                           </span>
                         ) : (
-                          <span className="inline-flex rounded-full px-2 py-0.5 text-[10px] bg-gray-100 text-gray-600">
+                          <span
+                            className={pillClass(
+                              "bg-slate-100 text-slate-600 dark:bg-slate-500/15 dark:text-slate-300",
+                            )}
+                          >
                             {t("usage.dataSource.proxy", {
                               defaultValue: "Proxy",
                             })}
@@ -584,16 +683,31 @@ export function RequestLogTable({
 
           {/* 分页控件 */}
           {total > 0 && (
-            <div className="app-panel-inset flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <span className="text-sm text-muted-foreground">
-                {t("usage.totalRecords", { total })}
-              </span>
-              <div className="app-scroll-x flex items-center gap-1 pb-1 sm:justify-end sm:pb-0">
+            <div className="app-panel-inset grid gap-3 px-3 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+              <div className="min-w-0 text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">
+                  {t("usage.totalRecords", {
+                    defaultValue: "共 {{total}} 条记录",
+                    total,
+                  })}
+                </span>
+                <span className="ml-2 text-xs">
+                  {t("usage.pageIndicator", {
+                    defaultValue: "第 {{page}} / {{totalPages}} 页",
+                    page: page + 1,
+                    totalPages: Math.max(totalPages, 1),
+                  })}
+                </span>
+              </div>
+              <div className="app-scroll-x flex min-w-0 items-center gap-1 pb-1 sm:justify-end sm:pb-0">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setPage(Math.max(0, page - 1))}
                   disabled={page === 0}
+                  aria-label={t("common.previous", {
+                    defaultValue: "上一页",
+                  })}
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -628,8 +742,12 @@ export function RequestLogTable({
                         key={p}
                         variant={p === page ? "default" : "outline"}
                         size="sm"
-                        className="h-8 w-8 p-0"
+                        className="h-8 w-8 shrink-0 p-0"
                         onClick={() => setPage(p)}
+                        aria-label={t("usage.gotoPage", {
+                          defaultValue: "跳转到第 {{page}} 页",
+                          page: p + 1,
+                        })}
                       >
                         {p + 1}
                       </Button>
@@ -641,6 +759,9 @@ export function RequestLogTable({
                   size="sm"
                   onClick={() => setPage(page + 1)}
                   disabled={page >= totalPages - 1}
+                  aria-label={t("common.next", {
+                    defaultValue: "下一页",
+                  })}
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>

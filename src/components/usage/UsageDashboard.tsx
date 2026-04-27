@@ -10,10 +10,7 @@ import { useTranslation } from "react-i18next";
 import type { TimeRange } from "@/types/usage";
 import { useUsageSummary } from "@/lib/query/usage";
 import { motion } from "framer-motion";
-import {
-  Calendar,
-  RefreshCw,
-} from "lucide-react";
+import { Calendar, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQueryClient } from "@tanstack/react-query";
@@ -67,7 +64,8 @@ export function UsageDashboard({
   const [timeRange, setTimeRange] = useState<TimeRange>("1d");
   const [refreshIntervalMs, setRefreshIntervalMs] = useState(0);
   const [customStart, setCustomStart] = useState(() => {
-    const d = new Date(); d.setDate(d.getDate() - 7);
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
     return d.toISOString().slice(0, 16);
   });
   const [customEnd, setCustomEnd] = useState(() =>
@@ -93,7 +91,12 @@ export function UsageDashboard({
       return Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
     }
     const map: Record<string, number> = {
-      "1d": 1, "7d": 7, "30d": 30, "90d": 90, "180d": 180, "365d": 365,
+      "1d": 1,
+      "7d": 7,
+      "30d": 30,
+      "90d": 90,
+      "180d": 180,
+      "365d": 365,
     };
     return map[timeRange] ?? 30;
   }, [timeRange, customStart, customEnd]);
@@ -106,10 +109,18 @@ export function UsageDashboard({
     refetchInterval: refreshIntervalMs > 0 ? refreshIntervalMs : false,
   });
 
-  const cardFallback = <div className="app-loading-state h-[148px] animate-pulse" />;
-  const chartFallback = <div className="app-loading-state h-[350px] animate-pulse" />;
-  const tableFallback = <div className="app-loading-state h-[420px] animate-pulse" />;
-  const barFallback = <div className="app-loading-state h-[48px] animate-pulse" />;
+  const cardFallback = (
+    <div className="app-loading-state h-[148px] animate-pulse" />
+  );
+  const chartFallback = (
+    <div className="app-loading-state h-[350px] animate-pulse" />
+  );
+  const tableFallback = (
+    <div className="app-loading-state h-[420px] animate-pulse" />
+  );
+  const barFallback = (
+    <div className="app-loading-state h-[48px] animate-pulse" />
+  );
 
   return (
     <motion.div
@@ -120,7 +131,7 @@ export function UsageDashboard({
     >
       {/* ── Toolbar: time range + refresh ── */}
       <div className="app-panel app-sticky-surface sticky top-0 z-10 px-4 py-3 shadow-sm">
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+        <div className="grid gap-3 2xl:grid-cols-[minmax(0,1fr)_auto] 2xl:items-center">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <Button
               type="button"
@@ -135,6 +146,11 @@ export function UsageDashboard({
                 ? `${refreshIntervalMs / 1000}s`
                 : t("common.manual", { defaultValue: "手动" })}
             </Button>
+
+            <span className="rounded-full border border-black/[0.08] bg-white/72 px-2 py-0.5 text-[11px] text-muted-foreground dark:border-white/[0.08] dark:bg-white/[0.05]">
+              {days}
+              {t("usage.daysLabel", { defaultValue: "天" })}
+            </span>
 
             {isRefiningFilters && (
               <div className="rounded-full border border-black/[0.08] bg-white/72 px-2 py-0.5 text-[11px] text-muted-foreground dark:border-white/[0.08] dark:bg-white/[0.05]">
@@ -155,7 +171,7 @@ export function UsageDashboard({
             </div>
           </div>
 
-          <div className="app-scroll-x flex min-w-0 items-center gap-2 pb-1 xl:justify-end xl:pb-0">
+          <div className="app-scroll-x flex min-w-0 items-center gap-2 pb-1 2xl:justify-end 2xl:pb-0">
             <Tabs
               value={timeRange}
               onValueChange={(value) =>
@@ -163,49 +179,79 @@ export function UsageDashboard({
               }
             >
               <TabsList className="app-segmented flex-nowrap">
-                <TabsTrigger value="1d" className="app-tabs-trigger px-2.5 text-xs">
+                <TabsTrigger
+                  value="1d"
+                  className="app-tabs-trigger px-2.5 text-xs"
+                >
                   {t("usage.today", { defaultValue: "今天" })}
                 </TabsTrigger>
-                <TabsTrigger value="7d" className="app-tabs-trigger px-2.5 text-xs">
+                <TabsTrigger
+                  value="7d"
+                  className="app-tabs-trigger px-2.5 text-xs"
+                >
                   {t("usage.last7days", { defaultValue: "7天" })}
                 </TabsTrigger>
-                <TabsTrigger value="30d" className="app-tabs-trigger px-2.5 text-xs">
+                <TabsTrigger
+                  value="30d"
+                  className="app-tabs-trigger px-2.5 text-xs"
+                >
                   {t("usage.last30days", { defaultValue: "30天" })}
                 </TabsTrigger>
-                <TabsTrigger value="90d" className="app-tabs-trigger px-2.5 text-xs">
+                <TabsTrigger
+                  value="90d"
+                  className="app-tabs-trigger px-2.5 text-xs"
+                >
                   {t("usage.last90days", { defaultValue: "90天" })}
                 </TabsTrigger>
-                <TabsTrigger value="180d" className="app-tabs-trigger px-2.5 text-xs">
+                <TabsTrigger
+                  value="180d"
+                  className="app-tabs-trigger px-2.5 text-xs"
+                >
                   {t("usage.last180days", { defaultValue: "半年" })}
                 </TabsTrigger>
-                <TabsTrigger value="365d" className="app-tabs-trigger px-2.5 text-xs">
+                <TabsTrigger
+                  value="365d"
+                  className="app-tabs-trigger px-2.5 text-xs"
+                >
                   {t("usage.last365days", { defaultValue: "一年" })}
                 </TabsTrigger>
-                <TabsTrigger value="custom" className="app-tabs-trigger px-2.5 text-xs">
+                <TabsTrigger
+                  value="custom"
+                  className="app-tabs-trigger px-2.5 text-xs"
+                >
                   <Calendar className="mr-1 h-3 w-3" />
                   {t("usage.custom", { defaultValue: "自定义" })}
                 </TabsTrigger>
               </TabsList>
             </Tabs>
 
-            <input
-              type="datetime-local"
-              className="box-border h-8 w-[178px] shrink-0 rounded-md border border-border bg-background px-1.5 text-center text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
-              style={{ height: 32, lineHeight: "32px" }}
-              value={customStart}
-              onChange={(e) => setCustomStart(e.target.value)}
-            />
-            <span className="shrink-0 text-xs text-muted-foreground">→</span>
-            <input
-              type="datetime-local"
-              className="box-border h-8 w-[178px] shrink-0 rounded-md border border-border bg-background px-1.5 text-center text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
-              style={{ height: 32, lineHeight: "32px" }}
-              value={customEnd}
-              onChange={(e) => setCustomEnd(e.target.value)}
-            />
-            <span className="shrink-0 whitespace-nowrap text-[11px] text-muted-foreground">
-              {days}{t("usage.daysLabel", { defaultValue: "天" })}
-            </span>
+            {timeRange === "custom" && (
+              <div className="flex shrink-0 items-center gap-2 rounded-lg border border-black/[0.08] bg-white/56 px-2 py-1 dark:border-white/[0.08] dark:bg-white/[0.04]">
+                <input
+                  type="datetime-local"
+                  className="box-border h-8 w-[178px] shrink-0 rounded-md border border-border bg-background px-1.5 text-center text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
+                  style={{ height: 32, lineHeight: "32px" }}
+                  value={customStart}
+                  onChange={(e) => setCustomStart(e.target.value)}
+                  aria-label={t("usage.startTime", {
+                    defaultValue: "开始时间",
+                  })}
+                />
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  →
+                </span>
+                <input
+                  type="datetime-local"
+                  className="box-border h-8 w-[178px] shrink-0 rounded-md border border-border bg-background px-1.5 text-center text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
+                  style={{ height: 32, lineHeight: "32px" }}
+                  value={customEnd}
+                  onChange={(e) => setCustomEnd(e.target.value)}
+                  aria-label={t("usage.endTime", {
+                    defaultValue: "结束时间",
+                  })}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -214,12 +260,12 @@ export function UsageDashboard({
       <Tabs defaultValue="overview" className="min-w-0 w-full">
         <div className="app-scroll-x pb-1">
           <TabsList className="app-segmented h-10 w-fit flex-nowrap">
-          <TabsTrigger value="overview" className="app-tabs-trigger px-5">
-            {t("usage.overview", { defaultValue: "总览" })}
-          </TabsTrigger>
-          <TabsTrigger value="logs" className="app-tabs-trigger px-5">
-            {t("usage.requestLogs", { defaultValue: "请求日志" })}
-          </TabsTrigger>
+            <TabsTrigger value="overview" className="app-tabs-trigger px-5">
+              {t("usage.overview", { defaultValue: "总览" })}
+            </TabsTrigger>
+            <TabsTrigger value="logs" className="app-tabs-trigger px-5">
+              {t("usage.requestLogs", { defaultValue: "请求日志" })}
+            </TabsTrigger>
           </TabsList>
         </div>
 
